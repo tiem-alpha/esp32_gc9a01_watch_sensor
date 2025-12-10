@@ -16,15 +16,6 @@
 
 //#define TOUCH_CS 16 // Optional for touch screen
 
-#define LOAD_GLCD
-#define LOAD_FONT2
-#define LOAD_FONT4
-#define LOAD_FONT6
-#define LOAD_FONT7
-#define LOAD_FONT8
-#define LOAD_GFXFF
-
-#define SMOOTH_FONT
 
 // FSPI (or VSPI) port (SPI2) used unless following defined. HSPI port is (SPI3) on S3.
 //#define USE_HSPI_PORT

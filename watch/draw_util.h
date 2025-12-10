@@ -15,7 +15,7 @@
 #define SCREEN_HEIGHT 240
 #define HALF_HEIGHT 120
 
-
+#define GRADIENT_SPEED (1.5)
 
 // bool InitBuffers(); 
 // void FreeBuffers() ; 
@@ -31,3 +31,5 @@ void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) ;
 void swap(int16_t* a, int16_t* b); 
 void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color); 
 void DrawString(int x , int y, const char* str, uint16_t color);
+void fillTriangleGradient(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
+                            uint16_t x2, uint16_t y2, uint16_t colorCenter);

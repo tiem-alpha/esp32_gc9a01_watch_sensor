@@ -54,18 +54,19 @@ void TempHumSensorInit()
   }
 }
 
-void updateTime()
+uint8_t updateTime()
 {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo))
   {
     Serial.println("Không thể lấy thời gian");
-    return;
+    return 0;
   }
 
   hour = timeinfo.tm_hour % 12;
   minute = timeinfo.tm_min;
   second = timeinfo.tm_sec;
+  return 1;
 }
 
 void TempHumRead()
@@ -95,6 +96,12 @@ void TempHumRead()
     }
 }
 
+
+void getTime()
+{
+  static unsigned long stamp = millis(); 
+  // if()
+}
 
 void Concurrent()
 {
@@ -134,6 +141,7 @@ void setup()
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   // Thêm số giờ
   watchInit();
+
 }
 
 void loop()

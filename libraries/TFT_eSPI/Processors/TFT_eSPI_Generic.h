@@ -29,12 +29,7 @@
 // Initialise processor specific SPI functions, used by init()
 #define INIT_TFT_DATA_BUS
 
-// If smooth fonts are enabled the filing system may need to be loaded
-#ifdef SMOOTH_FONT
-  // Call up the filing system for the anti-aliased fonts
-  //#define FS_NO_GLOBALS
-  //#include <FS.h>
-#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // Define the DC (TFT Data/Command or Register Select (RS))pin drive code

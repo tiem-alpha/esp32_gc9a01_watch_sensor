@@ -42,7 +42,7 @@ unsigned char MakeFont::putChar(int16_t x,int16_t y,uint16_t txt,uint16_t color,
         for(int h=0;h<size_h;h++)
             if(read(i,h,txt) != 0)
                 FontMaker_setpx(i+x,h+y+start_y,color);
-            else FontMaker_setpx(i+x,h+y+start_y,backcolor);
+            // else FontMaker_setpx(i+x,h+y+start_y,backcolor);
     return size_w;
 }
 unsigned char MakeFont::putChar(int16_t x,int16_t y,uint16_t txt,uint8_t cR,uint8_t cG,uint8_t cB,uint8_t cBR,uint8_t cBG,uint8_t cBB)
@@ -60,7 +60,7 @@ unsigned char MakeFont::putChar(int16_t x,int16_t y,uint16_t txt,uint8_t cR,uint
         for(int h=0;h<size_h;h++)
             if(read(i,h,txt) != 0)
                 FontMaker_setpx2(i+x,h+y+start_y,cR,cG,cB);
-            else FontMaker_setpx2(i+x,h+y+start_y,cBR,cBG,cBB);
+            // else FontMaker_setpx2(i+x,h+y+start_y,cBR,cBG,cBB);
     return size_w;
 }
 unsigned char MakeFont::getCharLength(uint16_t txt)

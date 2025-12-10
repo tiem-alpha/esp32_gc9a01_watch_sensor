@@ -38,15 +38,6 @@
 
 //#define TOUCH_CS  1 // Optional for touch screen
 
-#define LOAD_GLCD
-#define LOAD_FONT2
-#define LOAD_FONT4
-#define LOAD_FONT6
-#define LOAD_FONT7
-#define LOAD_FONT8
-#define LOAD_GFXFF
-
-#define SMOOTH_FONT
 
 //#define SPI_FREQUENCY  27000000
 #define SPI_FREQUENCY  40000000   // Maximum for ILI9341

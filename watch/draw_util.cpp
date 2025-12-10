@@ -3,13 +3,12 @@
 #include <TFT_eSPI.h>
 #include "FontMaker.h"
 
-
 // Khởi tạo đối tượng TFT
 TFT_eSPI tft = TFT_eSPI();
 
 void setpx(int16_t x, int16_t y, uint16_t color)
 {
-  drawPixel(x,y,color); 
+  drawPixel(x, y, color);
 }
 
 MakeFont myfont(&setpx);
@@ -86,7 +85,6 @@ void ScreenInit()
   tft.init();
   tft.setRotation(0);
   myfont.set_font(VN);
-  tft.fillScreen(0x0000);
   // Cấp phát bộ nhớ cho các buffer
   if (!InitBuffers())
   {
@@ -423,6 +421,94 @@ void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, in
   }
 }
 
-void DrawString(int x , int y, const char* str,uint16_t color){
+void DrawString(int x, int y, const char *str, uint16_t color)
+{
   myfont.print(x, y, str, color, BLACK);
+}
+
+static uint16_t getRGB565(uint8_t r, uint8_t g, uint8_t b)
+{
+   return (uint16_t)((((r >> 3) << 11)&0xF800) | (((g >> 2) << 5)&0xFFE0) | (uint16_t)(((b >> 3)&0x001F) & 0xFFFF));
+}
+
+// Khoảng cách từ điểm (px,py) đến đường thẳng ax + by + c = 0
+float lineDistance(float px, float py, float A, float B, float C)
+{
+    return fabsf(A * px + B * py + C) / sqrtf(A*A + B*B);
+}
+
+// Giảm sáng RGB565
+uint16_t darkenRGB565(uint16_t color, float factor)
+{
+    uint8_t r = (color >> 11) & 0x1F;
+    uint8_t g = (color >> 5)  & 0x3F;
+    uint8_t b =  color        & 0x1F;
+
+    r = (uint8_t)(r * factor);
+    g = (uint8_t)(g * factor);
+    b = (uint8_t)(b * factor);
+
+    return (r << 11) | (g << 5) | b;
+}
+
+void fillTriangleGradient(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
+                            uint16_t x2, uint16_t y2, uint16_t colorCenter)
+{
+    // Trung điểm cạnh AB
+    float xm = (x0 + x1) * 0.5f;
+    float ym = (y0 + y1) * 0.5f;
+
+    // Phương trình đường CM
+    // (y - y2) = k (x - x2)
+    // Đưa về dạng Ax + By + C = 0
+    float A = ym - y2;
+    float B = x2 - xm;
+    float C = xm*y2 - x2*ym;
+
+    // Khoảng cách xa nhất từ A hoặc B đến đường CM
+    float dA = lineDistance(x0, y0, A, B, C);
+    float dB = lineDistance(x1, y1, A, B, C);
+    float maxDist = fmaxf(dA, dB);
+    if (maxDist < 1.0f) maxDist = 1.0f;
+
+    // Sắp xếp theo y để scanline
+    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
+    if (y1 > y2) { std::swap(y1, y2); std::swap(x1, x2); }
+    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
+
+    auto interp = [&](float y, float xA, float yA, float xB, float yB){
+        if (fabs(yB - yA) < 0.001f) return xA;
+        return xA + (xB - xA) * ((y - yA) / (float)(yB - yA));
+    };
+
+    // Scan tam giác (2 phần)
+    for (int phase = 0; phase < 2; phase++)
+    {
+        int sy = (phase == 0 ? y0 : y1);
+        int ey = (phase == 0 ? y1 : y2);
+
+        for (int y = sy; y <= ey; y++)
+        {
+            float xa = (phase == 0) ?
+                interp(y, x0, y0, x1, y1) :
+                interp(y, x1, y1, x2, y2);
+
+            float xb = interp(y, x0, y0, x2, y2);
+
+            if (xa > xb) std::swap(xa, xb);
+
+            for (int x = (int)xa; x <= (int)xb; x++)
+            {
+                float d = lineDistance(x, y, A, B, C);
+                float t = d / maxDist;
+                if (t > 1.0f) t = 1.0f;
+
+                float factor = 1.0f - t;
+
+                uint16_t color = darkenRGB565(colorCenter, factor);
+
+              drawPixel(x, y, color);  
+            }
+        }
+    }
 }

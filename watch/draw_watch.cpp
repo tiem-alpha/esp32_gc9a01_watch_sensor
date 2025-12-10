@@ -32,10 +32,10 @@ void drawClockFace() {
   for (int i = 0; i < 60; i++) {
     if (i % 5 != 0) { // Bỏ qua các vạch giờ vì đã vẽ ở trên
       float angle = i * 6 * DEG_TO_RAD; // 6 độ mỗi phút (360/60)
-      int x1 = CLOCK_CENTER_X + sin(angle) * CLOCK_RADIUS;
-      int y1 = CLOCK_CENTER_Y - cos(angle) * CLOCK_RADIUS;
-      int x2 = CLOCK_CENTER_X + sin(angle) * (CLOCK_RADIUS - 3); // Vạch phút ngắn hơn
-      int y2 = CLOCK_CENTER_Y - cos(angle) * (CLOCK_RADIUS - 3);
+      int x1 = CLOCK_CENTER_X + sin(angle) * (CLOCK_RADIUS - 4);
+      int y1 = CLOCK_CENTER_Y - cos(angle) * (CLOCK_RADIUS -4);
+      int x2 = CLOCK_CENTER_X + sin(angle) * (CLOCK_RADIUS - 4); // Vạch phút ngắn hơn
+      int y2 = CLOCK_CENTER_Y - cos(angle) * (CLOCK_RADIUS - 4);
       drawLine(x1, y1, x2, y2, CLOCK_FACE_COLOR);
     }
   }
@@ -92,24 +92,38 @@ void drawPointedHand(float angle, int length, int width, int tail, uint16_t colo
   int rightBaseY = CLOCK_CENTER_Y + cos(perpAngle) * (width / 2);
 
   // Vẽ tam giác cho phần chính của kim (từ chân đến mút)
-  fillTriangle(
-    leftBaseX, leftBaseY,
-    rightBaseX, rightBaseY,
-    tipX, tipY,
-    color
-  );
+//  fillTriangle(
+//    leftBaseX, leftBaseY,
+//    rightBaseX, rightBaseY,
+//    tipX, tipY,
+//    color
+//  );
 
+  fillTriangleGradient(
+     leftBaseX, leftBaseY,
+     rightBaseX, rightBaseY,
+     tipX, tipY,
+     color
+   );
   // Vẽ phần đuôi kim (tam giác nhỏ hơn ở phía sau)
-  fillTriangle(
-    leftBaseX, leftBaseY,
-    rightBaseX, rightBaseY,
-    tailX, tailY,
-    color
-  );
+//  fillTriangle(
+//    leftBaseX, leftBaseY,
+//    rightBaseX, rightBaseY,
+//    tailX, tailY,
+//    color
+//  );
+
+    fillTriangleGradient(
+     leftBaseX, leftBaseY,
+     rightBaseX, rightBaseY,
+     tailX, tailY,
+     color
+   );
 }
 
 void drawHourNumber(){
   for (int i = 0; i < 12; i++) {
+    if(i%3!=0) continue;
     float angle = i * 30 * DEG_TO_RAD; // 30 độ mỗi giờ (360/12)
     int hourNum = i == 0 ? 12 : i; // Đổi 0 thành 12
     char hourStr[3];

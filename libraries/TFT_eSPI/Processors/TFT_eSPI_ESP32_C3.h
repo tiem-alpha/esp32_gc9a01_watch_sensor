@@ -123,14 +123,7 @@ SPI3_HOST = 2
   #define SPI_BUSY_CHECK while (*_spi_cmd&SPI_USR)
 #endif
 
-// If smooth font is used then it is likely SPIFFS will be needed
-#ifdef SMOOTH_FONT
-  // Call up the SPIFFS (SPI FLASH Filing System) for the anti-aliased fonts
-  #define FS_NO_GLOBALS
-  #include <FS.h>
-  #include "SPIFFS.h" // ESP32 only
-  #define FONT_FS_AVAILABLE
-#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // Define the DC (TFT Data/Command or Register Select (RS))pin drive code

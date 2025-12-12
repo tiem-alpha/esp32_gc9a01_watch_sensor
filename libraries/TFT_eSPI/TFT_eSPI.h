@@ -32,14 +32,6 @@
 #if !defined (TFT_PARALLEL_8_BIT) && !defined (RP2040_PIO_INTERFACE)
   #include <SPI.h>
 #endif
-/***************************************************************************************
-**                         Section 2: Load library and processor specific header files
-***************************************************************************************/
-// Include header file that defines the fonts loaded, the TFT drivers
-// available and the pins to be used, etc. etc.
-#ifdef CONFIG_TFT_eSPI_ESPIDF
-  #include "TFT_config.h"
-#endif
 
 
 
@@ -241,26 +233,6 @@ const PROGMEM fontinfo fontdata [] = {
 // and will then decode back to the same 16-bit value.
 // Convenient for 8-bit and 16-bit transparent sprites.
 #define TFT_TRANSPARENT 0x0120 // This is actually a dark green
-
-// Default palette for 4-bit colour sprites
-static const uint16_t default_4bit_palette[] PROGMEM = {
-  TFT_BLACK,    //  0  ^
-  TFT_BROWN,    //  1  |
-  TFT_RED,      //  2  |
-  TFT_ORANGE,   //  3  |
-  TFT_YELLOW,   //  4  Colours 0-9 follow the resistor colour code!
-  TFT_GREEN,    //  5  |
-  TFT_BLUE,     //  6  |
-  TFT_PURPLE,   //  7  |
-  TFT_DARKGREY, //  8  |
-  TFT_WHITE,    //  9  v
-  TFT_CYAN,     // 10  Blue+green mix
-  TFT_MAGENTA,  // 11  Blue+red mix
-  TFT_MAROON,   // 12  Darker red colour
-  TFT_DARKGREEN,// 13  Darker green colour
-  TFT_NAVY,     // 14  Darker blue colour
-  TFT_PINK      // 15
-};
 
 /***************************************************************************************
 **                         Section 7: Diagnostic support

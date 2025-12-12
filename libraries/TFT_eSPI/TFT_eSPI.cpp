@@ -1,17 +1,3 @@
-/***************************************************
-  Arduino TFT graphics library targeted at 32-bit
-  processors such as ESP32, ESP8266 and STM32.
-
-  This is a stand-alone library that contains the
-  hardware driver, the graphics functions and the
-  proportional fonts.
-
-  The larger fonts are Run Length Encoded to reduce their
-  size.
-
-  Created by Bodmer 2/12/16
-  Last update by Bodmer 20/03/20
- ****************************************************/
 
 #include "TFT_eSPI.h"
 
@@ -23,12 +9,6 @@
   #else
     #include "Processors/TFT_eSPI_ESP32.c"
   #endif
-#elif defined (ARDUINO_ARCH_ESP8266)
-  #include "Processors/TFT_eSPI_ESP8266.c"
-#elif defined (STM32) // (_VARIANT_ARDUINO_STM32_) stm32_def.h
-  #include "Processors/TFT_eSPI_STM32.c"
-#elif defined (ARDUINO_ARCH_RP2040)  || defined (ARDUINO_ARCH_MBED) // Raspberry Pi Pico
-  #include "Processors/TFT_eSPI_RP2040.c"
 #else
   #include "Processors/TFT_eSPI_Generic.c"
 #endif
@@ -74,7 +54,7 @@
 inline void TFT_eSPI::begin_tft_write(void){
   if (locked) {
     locked = false; // Flag to show SPI access now unlocked
-#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT) && !defined(RP2040_PIO_INTERFACE)
+#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT)  
     spi.beginTransaction(SPISettings(SPI_FREQUENCY, MSBFIRST, TFT_SPI_MODE));
 #endif
     CS_L;
@@ -86,7 +66,7 @@ inline void TFT_eSPI::begin_tft_write(void){
 void TFT_eSPI::begin_nin_write(void){
   if (locked) {
     locked = false; // Flag to show SPI access now unlocked
-#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT) && !defined(RP2040_PIO_INTERFACE)
+#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT)  
     spi.beginTransaction(SPISettings(SPI_FREQUENCY, MSBFIRST, TFT_SPI_MODE));
 #endif
     CS_L;
@@ -105,7 +85,7 @@ inline void TFT_eSPI::end_tft_write(void){
       SPI_BUSY_CHECK;       // Check send complete and clean out unused rx data
       CS_H;
       SET_BUS_READ_MODE;    // In case bus has been configured for tx only
-#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT) && !defined(RP2040_PIO_INTERFACE)
+#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT)  
       spi.endTransaction();
 #endif
     }
@@ -120,7 +100,7 @@ inline void TFT_eSPI::end_nin_write(void){
       SPI_BUSY_CHECK;       // Check send complete and clean out unused rx data
       CS_H;
       SET_BUS_READ_MODE;    // In case SPI has been configured for tx only
-#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT) && !defined(RP2040_PIO_INTERFACE)
+#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT)  
       spi.endTransaction();
 #endif
     }
@@ -133,20 +113,7 @@ inline void TFT_eSPI::end_nin_write(void){
 ***************************************************************************************/
 // Reads require a lower SPI clock rate than writes
 inline void TFT_eSPI::begin_tft_read(void){
-  DMA_BUSY_CHECK; // Wait for any DMA transfer to complete before changing SPI settings
-#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT) && !defined(RP2040_PIO_INTERFACE)
-  if (locked) {
-    locked = false;
-    spi.beginTransaction(SPISettings(SPI_READ_FREQUENCY, MSBFIRST, TFT_SPI_MODE));
-    CS_L;
-  }
-#else
-  #if !defined(TFT_PARALLEL_8_BIT) && !defined(RP2040_PIO_INTERFACE)
-    spi.setFrequency(SPI_READ_FREQUENCY);
-  #endif
-   CS_L;
-#endif
-  SET_BUS_READ_MODE;
+ 
 }
 
 /***************************************************************************************
@@ -154,21 +121,7 @@ inline void TFT_eSPI::begin_tft_read(void){
 ** Description:             End transaction for reads and deselect TFT
 ***************************************************************************************/
 inline void TFT_eSPI::end_tft_read(void){
-#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(TFT_PARALLEL_8_BIT) && !defined(RP2040_PIO_INTERFACE)
-  if(!inTransaction) {
-    if (!locked) {
-      locked = true;
-      CS_H;
-      spi.endTransaction();
-    }
-  }
-#else
-  #if !defined(TFT_PARALLEL_8_BIT) && !defined(RP2040_PIO_INTERFACE)
-    spi.setFrequency(SPI_FREQUENCY);
-  #endif
-   if(!inTransaction) {CS_H;}
-#endif
-  SET_BUS_WRITE_MODE;
+
 }
 
 
@@ -180,16 +133,7 @@ TFT_eSPI::TFT_eSPI(int16_t w, int16_t h)
 {
   _init_width  = _width  = w; // Set by specific xxxxx_Defines.h file or by users sketch
   _init_height = _height = h; // Set by specific xxxxx_Defines.h file or by users sketch
-
-  // Reset the viewport to the whole screen
-
-
   rotation  = 0;
-
-
-
- 
-
   _swapBytes = true;   // Do not swap colour bytes by default
 
   locked = true;           // Transaction mutex lock flag to ensure begin/endTranaction pairing
@@ -198,24 +142,12 @@ TFT_eSPI::TFT_eSPI(int16_t w, int16_t h)
 
   _booted   = true;     // Default attributes
   
-
-
-#if defined (ESP32) && defined (CONFIG_SPIRAM_SUPPORT)
-  if (psramFound()) _psram_enable = true; // Enable the use of PSRAM (if available)
-  else
-#endif
   _psram_enable = false;
-
- 
-
-
 // Legacy support for bit GPIO masks
   cspinmask = 0;
   dcpinmask = 0;
   wrpinmask = 0;
   sclkpinmask = 0;
-
-
 }
 /***************************************************************************************
 ** Function name:           initBus
@@ -230,21 +162,6 @@ void TFT_eSPI::initBus(void) {
   }
 #endif
 
-// Configure chip select for touchscreen controller if present
-#ifdef TOUCH_CS
-  if (TOUCH_CS >= 0) {
-    pinMode(TOUCH_CS, OUTPUT);
-    digitalWrite(TOUCH_CS, HIGH); // Chip select high (inactive)
-  }
-#endif
-
-// In parallel mode and with the RP2040 processor, the TFT_WR line is handled in the  PIO
-#if defined (TFT_WR) && !defined (ARDUINO_ARCH_RP2040) && !defined (ARDUINO_ARCH_MBED)
-  if (TFT_WR >= 0) {
-    pinMode(TFT_WR, OUTPUT);
-    digitalWrite(TFT_WR, HIGH); // Set write strobe high (inactive)
-  }
-#endif
 
 #ifdef TFT_DC
   if (TFT_DC >= 0) {
@@ -304,43 +221,17 @@ void TFT_eSPI::init(uint8_t tc)
   if (_booted)
   {
     initBus();
+Serial.println("init ------------------------ boot");
 
-#if !defined (ESP32) && !defined(TFT_PARALLEL_8_BIT) && !defined(ARDUINO_ARCH_RP2040) && !defined (ARDUINO_ARCH_MBED)
-  // Legacy bitmasks for GPIO
-  #if defined (TFT_CS) && (TFT_CS >= 0)
-    cspinmask = (uint32_t) digitalPinToBitMask(TFT_CS);
-  #endif
-
-  #if defined (TFT_DC) && (TFT_DC >= 0)
-    dcpinmask = (uint32_t) digitalPinToBitMask(TFT_DC);
-  #endif
-
-  #if defined (TFT_WR) && (TFT_WR >= 0)
-    wrpinmask = (uint32_t) digitalPinToBitMask(TFT_WR);
-  #endif
-
-  #if defined (TFT_SCLK) && (TFT_SCLK >= 0)
-    sclkpinmask = (uint32_t) digitalPinToBitMask(TFT_SCLK);
-  #endif
-
-  #if defined (TFT_SPI_OVERLAP) && defined (ARDUINO_ARCH_ESP8266)
-    // Overlap mode SD0=MISO, SD1=MOSI, CLK=SCLK must use D3 as CS
-    //    pins(int8_t sck, int8_t miso, int8_t mosi, int8_t ss);
-    //spi.pins(        6,          7,           8,          0);
-    spi.pins(6, 7, 8, 0);
-  #endif
-
-  spi.begin(); // This will set HMISO to input
-
-#else
-  #if !defined(TFT_PARALLEL_8_BIT) && !defined(RP2040_PIO_INTERFACE)
+  #if !defined(TFT_PARALLEL_8_BIT)  
     #if defined (TFT_MOSI) && !defined (TFT_SPI_OVERLAP) && !defined(ARDUINO_ARCH_RP2040) && !defined (ARDUINO_ARCH_MBED)
       spi.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, -1); // This will set MISO to input
+      Serial.println("=======================");
     #else
       spi.begin(); // This will set MISO to input
     #endif
   #endif
-#endif
+
     lockTransaction = false;
     inTransaction = false;
     locked = true;
@@ -348,19 +239,16 @@ void TFT_eSPI::init(uint8_t tc)
     INIT_TFT_DATA_BUS;
 
 
-#if defined (TFT_CS) && !defined(RP2040_PIO_INTERFACE)
+#if defined (TFT_CS)  
   // Set to output once again in case MISO is used for CS
   if (TFT_CS >= 0) {
     pinMode(TFT_CS, OUTPUT);
     digitalWrite(TFT_CS, HIGH); // Chip select high (inactive)
   }
-#elif defined (ARDUINO_ARCH_ESP8266) && !defined (TFT_PARALLEL_8_BIT) && !defined (RP2040_PIO_SPI)
-  spi.setHwCs(1); // Use hardware SS toggling
+
 #endif
-
-
   // Set to output once again in case MISO is used for DC
-#if defined (TFT_DC) && !defined(RP2040_PIO_INTERFACE)
+#if defined (TFT_DC)  
   if (TFT_DC >= 0) {
     pinMode(TFT_DC, OUTPUT);
     digitalWrite(TFT_DC, HIGH); // Data/Command high = data mode
@@ -400,34 +288,10 @@ void TFT_eSPI::init(uint8_t tc)
 
 #include "TFT_Drivers/GC9A01_Init.h"
 
-
-
-#ifdef TFT_INVERSION_ON
-  writecommand(TFT_INVON);
-#endif
-
-#ifdef TFT_INVERSION_OFF
-  writecommand(TFT_INVOFF);
-#endif
-
   end_tft_write();
 
   setRotation(rotation);
 
-#if defined (TFT_BL) && defined (TFT_BACKLIGHT_ON)
-  if (TFT_BL >= 0) {
-    pinMode(TFT_BL, OUTPUT);
-    digitalWrite(TFT_BL, TFT_BACKLIGHT_ON);
-  }
-#else
-  #if defined (TFT_BL) && defined (M5STACK)
-    // Turn on the back-light LED
-    if (TFT_BL >= 0) {
-      pinMode(TFT_BL, OUTPUT);
-      digitalWrite(TFT_BL, HIGH);
-    }
-  #endif
-#endif
 }
 
 
@@ -552,22 +416,7 @@ void TFT_eSPI::writedata(uint8_t d)
 uint8_t TFT_eSPI::readcommand8(uint8_t cmd_function, uint8_t index)
 {
   uint8_t reg = 0;
-#if defined(TFT_PARALLEL_8_BIT) || defined(RP2040_PIO_INTERFACE)
 
-  writecommand(cmd_function); // Sets DC and CS high
-
-  busDir(GPIO_DIR_MASK, INPUT);
-
-  CS_L;
-
-  // Read nth parameter (assumes caller discards 1st parameter or points index to 2nd)
-  while(index--) reg = readByte();
-
-  busDir(GPIO_DIR_MASK, OUTPUT);
-
-  CS_H;
-
-#else // SPI interface
   // Tested with ILI9341 set to Interface II i.e. IM [3:0] = "1101"
   begin_tft_read();
   index = 0x10 + (index & 0x0F);
@@ -583,7 +432,6 @@ uint8_t TFT_eSPI::readcommand8(uint8_t cmd_function, uint8_t index)
   reg = tft_Read_8();
 
   end_tft_read();
-#endif
   return reg;
 }
 
@@ -705,12 +553,7 @@ void TFT_eSPI::endWrite(void)
 
 
 
-/***************************************************************************************
-** Function name:           pushColors
-** Description:             push an array of pixels for 16-bit raw image drawing
-***************************************************************************************/
-// Assumed that setAddrWindow() has previously been called
-// len is number of bytes, not pixels
+
 void TFT_eSPI::pushColors(uint8_t *data, uint32_t len)
 {
   begin_tft_write();

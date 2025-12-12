@@ -1,5 +1,5 @@
 #pragma once 
-#include<Arduino.h>
+#include"data_type.h"
 
 #define RED     0xF800
 #define GREEN   0x07E0

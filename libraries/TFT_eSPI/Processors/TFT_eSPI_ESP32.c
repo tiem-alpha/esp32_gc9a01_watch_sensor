@@ -187,13 +187,11 @@ void TFT_eSPI::pushPixels(const void* data_in, uint32_t len)
 {
   uint8_t *data = (uint8_t*)data_in;
 
-  if(_swapBytes) {
+
       while ( len-- ) {tft_Write_16(*data); data++;}
       return;
-  }
+  
 
-  while ( len >=64 ) {spi.writePattern(data, 64, 1); data += 64; len -= 64; }
-  if (len) spi.writePattern(data, len, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -370,48 +368,10 @@ void TFT_eSPI::pushSwapBytePixels(const void* data_in, uint32_t len){
 ***************************************************************************************/
 void TFT_eSPI::pushPixels(const void* data_in, uint32_t len){
 
-  if(_swapBytes) {
+  
     pushSwapBytePixels(data_in, len);
     return;
-  }
-
-  uint32_t *data = (uint32_t*)data_in;
-
-  if (len > 31)
-  {
-    WRITE_PERI_REG(SPI_MOSI_DLEN_REG(SPI_PORT), 511);
-    while(len>31)
-    {
-      while (READ_PERI_REG(SPI_CMD_REG(SPI_PORT))&SPI_USR);
-      WRITE_PERI_REG(SPI_W0_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W1_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W2_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W3_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W4_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W5_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W6_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W7_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W8_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W9_REG(SPI_PORT),  *data++);
-      WRITE_PERI_REG(SPI_W10_REG(SPI_PORT), *data++);
-      WRITE_PERI_REG(SPI_W11_REG(SPI_PORT), *data++);
-      WRITE_PERI_REG(SPI_W12_REG(SPI_PORT), *data++);
-      WRITE_PERI_REG(SPI_W13_REG(SPI_PORT), *data++);
-      WRITE_PERI_REG(SPI_W14_REG(SPI_PORT), *data++);
-      WRITE_PERI_REG(SPI_W15_REG(SPI_PORT), *data++);
-      SET_PERI_REG_MASK(SPI_CMD_REG(SPI_PORT), SPI_USR);
-      len -= 32;
-    }
-  }
-
-  if (len)
-  {
-    while (READ_PERI_REG(SPI_CMD_REG(SPI_PORT))&SPI_USR);
-    WRITE_PERI_REG(SPI_MOSI_DLEN_REG(SPI_PORT), (len << 4) - 1);
-    for (uint32_t i=0; i <= (len<<1); i+=4) WRITE_PERI_REG((SPI_W0_REG(SPI_PORT) + i), *data++);
-    SET_PERI_REG_MASK(SPI_CMD_REG(SPI_PORT), SPI_USR);
-  }
-  while (READ_PERI_REG(SPI_CMD_REG(SPI_PORT))&SPI_USR);
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -496,8 +456,8 @@ void TFT_eSPI::pushPixels(const void* data_in, uint32_t len){
 
   uint16_t *data = (uint16_t*)data_in;
   // ILI9488 write macro is not endianess dependant, hence !_swapBytes
-  if(!_swapBytes) { while ( len-- ) {tft_Write_16S(*data); data++;} }
-  else { while ( len-- ) {tft_Write_16(*data); data++;} }
+  while ( len-- ) {tft_Write_16S(*data); data++;} 
+  
 }
 
 /***************************************************************************************
@@ -557,8 +517,8 @@ void TFT_eSPI::pushSwapBytePixels(const void* data_in, uint32_t len){
 void TFT_eSPI::pushPixels(const void* data_in, uint32_t len){
 
   uint16_t *data = (uint16_t*)data_in;
-  if(_swapBytes) { while ( len-- ) {tft_Write_16(*data); data++; } }
-  else { while ( len-- ) {tft_Write_16S(*data); data++;} }
+   while ( len-- ) {tft_Write_16(*data); data++; } 
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -622,9 +582,9 @@ void TFT_eSPI::pushPixelsDMA(uint16_t* image, uint32_t len)
 
   dmaWait();
 
-  if(_swapBytes) {
+  
     for (uint32_t i = 0; i < len; i++) (image[i] = image[i] << 8 | image[i] >> 8);
-  }
+  
 
   esp_err_t ret;
   static spi_transaction_t trans;
@@ -706,28 +666,20 @@ void TFT_eSPI::pushImageDMA(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t
 
   // If image is clipped, copy pixels into a contiguous block
   if ( (dw != w) || (dh != h) ) {
-    if(_swapBytes) {
+    
       for (int32_t yb = 0; yb < dh; yb++) {
         for (int32_t xb = 0; xb < dw; xb++) {
           uint32_t src = xb + dx + w * (yb + dy);
           (buffer[xb + yb * dw] = image[src] << 8 | image[src] >> 8);
         }
       }
-    }
-    else {
-      for (int32_t yb = 0; yb < dh; yb++) {
-        memcpy((uint8_t*) (buffer + yb * dw), (uint8_t*) (image + dx + w * (yb + dy)), dw << 1);
-      }
-    }
+   
   }
   // else, if a buffer pointer has been provided copy whole image to the buffer
-  else if (buffer != image || _swapBytes) {
-    if(_swapBytes) {
+  else  {
+   
       for (uint32_t i = 0; i < len; i++) (buffer[i] = image[i] << 8 | image[i] >> 8);
-    }
-    else {
-      memcpy(buffer, image, len*2);
-    }
+    
   }
 
   if (spiBusyCheck) dmaWait(); // In case we did not wait earlier

@@ -1,7 +1,7 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include<Arduino.h>
+#include"data_type.h"
 
  struct MyTimer{
     uint32_t value;

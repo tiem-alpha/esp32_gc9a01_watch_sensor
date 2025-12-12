@@ -2,7 +2,7 @@
 #define FACE_H
 
 #include <stdint.h>
-#include <Arduino.h>
+#include"data_type.h"
 
 #define FACE_W 240
 

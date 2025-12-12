@@ -1,6 +1,6 @@
 #ifndef MYLED_H
 #define MYLED_H
-#include<Arduino.h>
+#include"data_type.h"
 #include"custom_timer.h"
 
 #define MYLED_AFFECT_TIME_US 10000 

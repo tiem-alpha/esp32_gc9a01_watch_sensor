@@ -81,14 +81,11 @@ void TFT_eSPI::pushBlock(uint16_t color, uint32_t len){
 void TFT_eSPI::pushPixels(const void* data_in, uint32_t len){
 
   uint16_t *data = (uint16_t*)data_in;
-  if(_swapBytes) {
+ 
     while (len>1) {tft_Write_16(*data); data++; tft_Write_16(*data); data++; len -=2;}
     if (len) {tft_Write_16(*data);}
     return;
-  }
-
-  while (len>1) {tft_Write_16S(*data); data++; tft_Write_16S(*data); data++; len -=2;}
-  if (len) {tft_Write_16S(*data);}
+ 
 }
 
 /***************************************************************************************
@@ -167,8 +164,8 @@ void TFT_eSPI::pushPixels(const void* data_in, uint32_t len)
 {
   uint16_t *data = (uint16_t*)data_in;
 
-  if (_swapBytes) while ( len-- ) {tft_Write_16S(*data); data++;}
-  else while ( len-- ) {tft_Write_16(*data); data++;}
+  while ( len-- ) {tft_Write_16S(*data); data++;}
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +193,7 @@ void TFT_eSPI::pushBlock(uint16_t color, uint32_t len)
 void TFT_eSPI::pushPixels(const void* data_in, uint32_t len){
 
   uint16_t *data = (uint16_t*)data_in;
-  if (_swapBytes) {
+ 
     while ( len-- ) {
       uint16_t color = *data >> 8 | *data << 8;
       tft_Write_8((color & 0xF800)>>8);
@@ -204,15 +201,7 @@ void TFT_eSPI::pushPixels(const void* data_in, uint32_t len){
       tft_Write_8((color & 0x001F)<<3);
       data++;
     }
-  }
-  else {
-    while ( len-- ) {
-      tft_Write_8((*data & 0xF800)>>8);
-      tft_Write_8((*data & 0x07E0)>>3);
-      tft_Write_8((*data & 0x001F)<<3);
-      data++;
-    }
-  }
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -236,8 +225,8 @@ void TFT_eSPI::pushPixels(const void* data_in, uint32_t len){
 
   uint16_t *data = (uint16_t*)data_in;
 
-  if (_swapBytes) while ( len-- ) {tft_Write_16(*data); data++;}
-  else while ( len-- ) {tft_Write_16S(*data); data++;}
+ while ( len-- ) {tft_Write_16(*data); data++;}
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

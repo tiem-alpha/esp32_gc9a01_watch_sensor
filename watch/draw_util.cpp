@@ -5,9 +5,12 @@
 
 // Khởi tạo đối tượng TFT
 TFT_eSPI tft = TFT_eSPI();
-
+static uint8_t isChange =0;; 
 void setpx(int16_t x, int16_t y, uint16_t color)
 {
+  if(x<0||x>=SCREEN_WIDTH||y<0||y>=SCREEN_HEIGHT){
+    return;
+  }
   drawPixel(x, y, color);
 }
 
@@ -77,6 +80,7 @@ static void FreeBuffers()
     free(buffer2);
     buffer2 = NULL;
   }
+  
 }
 
 void ScreenInit()
@@ -99,7 +103,7 @@ void ClearBuffers()
   // Kiểm tra xem các buffer đã được cấp phát chưa
   if (buffer1 == NULL || buffer2 == NULL)
     return;
-
+  isChange =1;
   memset(buffer1, 0, SCREEN_WIDTH * HALF_HEIGHT * sizeof(uint16_t));
   memset(buffer2, 0, SCREEN_WIDTH * HALF_HEIGHT * sizeof(uint16_t));
 }
@@ -108,7 +112,7 @@ void ClearBuffers()
 void DisplayBuffers()
 {
   // Kiểm tra xem các buffer đã được cấp phát chưa
-  if (buffer1 == NULL || buffer2 == NULL)
+  if (buffer1 == NULL || buffer2 == NULL|| isChange == 0)
     return;
 
   // Hiển thị nửa trên của màn hình
@@ -118,6 +122,7 @@ void DisplayBuffers()
   // Hiển thị nửa dưới của màn hình
   tft.setAddrWindow(0, HALF_HEIGHT, SCREEN_WIDTH, HALF_HEIGHT);
   tft.pushColors(buffer2, SCREEN_WIDTH * HALF_HEIGHT);
+  isChange = 0;
 }
 
 void Draw565ImageProgmem(int x, int y, int width, int height, const uint16_t *pBmp)

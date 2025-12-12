@@ -61,22 +61,11 @@ SPI2_HOST = 1
 SPI3_HOST = 2
 */
 
-// ESP32 specific SPI port selection
-#ifdef USE_HSPI_PORT
-  #ifdef CONFIG_IDF_TARGET_ESP32
-    #define SPI_PORT HSPI  //HSPI is port 2 on ESP32
-  #else
-    #define SPI_PORT 3     //HSPI is port 3 on ESP32 S2
-  #endif
-#elif defined(USE_FSPI_PORT)
-    #define SPI_PORT 2 //FSPI(ESP32 S2)
-#else
   #ifdef CONFIG_IDF_TARGET_ESP32
     #define SPI_PORT VSPI
   #else
     #define SPI_PORT 2 //FSPI(ESP32 S2)
   #endif
-#endif
 
 #ifdef RPI_DISPLAY_TYPE
   #define CMD_BITS (16-1)

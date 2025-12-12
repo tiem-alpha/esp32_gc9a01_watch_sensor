@@ -68,7 +68,7 @@ void drawClockHands(int hour, int minute, int second) {
 
   // Vẽ lại điểm trung tâm
   fillCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, 3, CENTER_COLOR); // Tăng kích thước điểm trung tâm
-  DisplayBuffers();
+  
 }
 
 void drawPointedHand(float angle, int length, int width, int tail, uint16_t color) {
@@ -123,7 +123,7 @@ void drawPointedHand(float angle, int length, int width, int tail, uint16_t colo
 
 void drawHourNumber(){
   for (int i = 0; i < 12; i++) {
-    if(i%3!=0) continue;
+    // if(i%3!=0) continue;
     float angle = i * 30 * DEG_TO_RAD; // 30 độ mỗi giờ (360/12)
     int hourNum = i == 0 ? 12 : i; // Đổi 0 thành 12
     char hourStr[3];
@@ -141,7 +141,3 @@ void drawHourNumber(){
    
 }
 
-/*
-  
-  }
-*/

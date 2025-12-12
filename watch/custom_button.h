@@ -1,11 +1,11 @@
 #ifndef BUTTON_H
 
 #define BUTTON_H
-#include<Arduino.h>
+#include"data_type.h"
 #include"custom_timer.h"
 
 // Timing
-#define DEBOUND_TIME_MS  50       // thời gian debounce
+#define DEBOUND_TIME_MS  10       // thời gian debounce
 #define DOUBLE_CLICK_TIME_MS  300   // tối đa 300ms để double click
 #define LONG_CLICK_TIME_MS  800     // ấn giữ trên 800ms là long press
 

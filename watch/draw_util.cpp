@@ -5,10 +5,11 @@
 
 // Khởi tạo đối tượng TFT
 TFT_eSPI tft = TFT_eSPI();
-static uint8_t isChange =0;; 
+static uint8_t isChange = 0;
 void setpx(int16_t x, int16_t y, uint16_t color)
 {
-  if(x<0||x>=SCREEN_WIDTH||y<0||y>=SCREEN_HEIGHT){
+  if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT)
+  {
     return;
   }
   drawPixel(x, y, color);
@@ -18,7 +19,7 @@ MakeFont myfont(&setpx);
 // Con trỏ cho hai buffer được cấp phát động
 uint16_t *buffer1 = NULL; // Buffer cho nửa trên màn hình
 uint16_t *buffer2 = NULL; // Buffer cho nửa dưới màn hình
-
+static void drawNewScreen(const uint16_t *background);
 // Hàm cấp phát động cho các buffer
 static bool InitBuffers()
 {
@@ -80,7 +81,6 @@ static void FreeBuffers()
     free(buffer2);
     buffer2 = NULL;
   }
-  
 }
 
 void ScreenInit()
@@ -103,7 +103,7 @@ void ClearBuffers()
   // Kiểm tra xem các buffer đã được cấp phát chưa
   if (buffer1 == NULL || buffer2 == NULL)
     return;
-  isChange =1;
+  // isChange =1;
   memset(buffer1, 0, SCREEN_WIDTH * HALF_HEIGHT * sizeof(uint16_t));
   memset(buffer2, 0, SCREEN_WIDTH * HALF_HEIGHT * sizeof(uint16_t));
 }
@@ -111,8 +111,9 @@ void ClearBuffers()
 // Hàm hiển thị hai buffer lên màn hình sử dụng TFT_eSPI
 void DisplayBuffers()
 {
+  // if(isChange ==0) return;
   // Kiểm tra xem các buffer đã được cấp phát chưa
-  if (buffer1 == NULL || buffer2 == NULL|| isChange == 0)
+  if (buffer1 == NULL || buffer2 == NULL || isChange == 0)
     return;
 
   // Hiển thị nửa trên của màn hình
@@ -180,7 +181,6 @@ void drawPixel(int16_t x, int16_t y, uint16_t color)
 void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
 {
   int16_t steep = abs(y1 - y0) > abs(x1 - x0);
-
   if (steep)
   {
     // Đổi x và y
@@ -433,87 +433,225 @@ void DrawString(int x, int y, const char *str, uint16_t color)
 
 static uint16_t getRGB565(uint8_t r, uint8_t g, uint8_t b)
 {
-   return (uint16_t)((((r >> 3) << 11)&0xF800) | (((g >> 2) << 5)&0xFFE0) | (uint16_t)(((b >> 3)&0x001F) & 0xFFFF));
+  return (uint16_t)((((r >> 3) << 11) & 0xF800) | (((g >> 2) << 5) & 0xFFE0) | (uint16_t)(((b >> 3) & 0x001F) & 0xFFFF));
 }
 
 // Khoảng cách từ điểm (px,py) đến đường thẳng ax + by + c = 0
 float lineDistance(float px, float py, float A, float B, float C)
 {
-    return fabsf(A * px + B * py + C) / sqrtf(A*A + B*B);
+  return fabsf(A * px + B * py + C) / sqrtf(A * A + B * B);
 }
 
 // Giảm sáng RGB565
 uint16_t darkenRGB565(uint16_t color, float factor)
 {
-    uint8_t r = (color >> 11) & 0x1F;
-    uint8_t g = (color >> 5)  & 0x3F;
-    uint8_t b =  color        & 0x1F;
+  uint8_t r = (color >> 11) & 0x1F;
+  uint8_t g = (color >> 5) & 0x3F;
+  uint8_t b = color & 0x1F;
 
-    r = (uint8_t)(r * factor);
-    g = (uint8_t)(g * factor);
-    b = (uint8_t)(b * factor);
+  r = (uint8_t)(r * factor);
+  g = (uint8_t)(g * factor);
+  b = (uint8_t)(b * factor);
 
-    return (r << 11) | (g << 5) | b;
+  return (r << 11) | (g << 5) | b;
 }
 
 void fillTriangleGradient(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
-                            uint16_t x2, uint16_t y2, uint16_t colorCenter)
+                          uint16_t x2, uint16_t y2, uint16_t colorCenter)
 {
-    // Trung điểm cạnh AB
-    float xm = (x0 + x1) * 0.5f;
-    float ym = (y0 + y1) * 0.5f;
 
-    // Phương trình đường CM
-    // (y - y2) = k (x - x2)
-    // Đưa về dạng Ax + By + C = 0
-    float A = ym - y2;
-    float B = x2 - xm;
-    float C = xm*y2 - x2*ym;
+  // Trung điểm cạnh AB
+  float xm = (x0 + x1) * 0.5f;
+  float ym = (y0 + y1) * 0.5f;
 
-    // Khoảng cách xa nhất từ A hoặc B đến đường CM
-    float dA = lineDistance(x0, y0, A, B, C);
-    float dB = lineDistance(x1, y1, A, B, C);
-    float maxDist = fmaxf(dA, dB);
-    if (maxDist < 1.0f) maxDist = 1.0f;
+  // Phương trình đường CM
+  // (y - y2) = k (x - x2)
+  // Đưa về dạng Ax + By + C = 0
+  float A = ym - y2;
+  float B = x2 - xm;
+  float C = xm * y2 - x2 * ym;
 
-    // Sắp xếp theo y để scanline
-    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
-    if (y1 > y2) { std::swap(y1, y2); std::swap(x1, x2); }
-    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
+  // Khoảng cách xa nhất từ A hoặc B đến đường CM
+  float dA = lineDistance(x0, y0, A, B, C);
+  float dB = lineDistance(x1, y1, A, B, C);
+  float maxDist = fmaxf(dA, dB);
+  if (maxDist < 1.0f)
+    maxDist = 1.0f;
 
-    auto interp = [&](float y, float xA, float yA, float xB, float yB){
-        if (fabs(yB - yA) < 0.001f) return xA;
-        return xA + (xB - xA) * ((y - yA) / (float)(yB - yA));
-    };
+  // Sắp xếp theo y để scanline
+  if (y0 > y1)
+  {
+    std::swap(y0, y1);
+    std::swap(x0, x1);
+  }
+  if (y1 > y2)
+  {
+    std::swap(y1, y2);
+    std::swap(x1, x2);
+  }
+  if (y0 > y1)
+  {
+    std::swap(y0, y1);
+    std::swap(x0, x1);
+  }
 
-    // Scan tam giác (2 phần)
-    for (int phase = 0; phase < 2; phase++)
+  auto interp = [&](float y, float xA, float yA, float xB, float yB)
+  {
+    if (fabs(yB - yA) < 0.001f)
+      return xA;
+    return xA + (xB - xA) * ((y - yA) / (float)(yB - yA));
+  };
+
+  // Scan tam giác (2 phần)
+  for (int phase = 0; phase < 2; phase++)
+  {
+    int sy = (phase == 0 ? y0 : y1);
+    int ey = (phase == 0 ? y1 : y2);
+
+    for (int y = sy; y <= ey; y++)
     {
-        int sy = (phase == 0 ? y0 : y1);
-        int ey = (phase == 0 ? y1 : y2);
+      float xa = (phase == 0) ? interp(y, x0, y0, x1, y1) : interp(y, x1, y1, x2, y2);
 
-        for (int y = sy; y <= ey; y++)
-        {
-            float xa = (phase == 0) ?
-                interp(y, x0, y0, x1, y1) :
-                interp(y, x1, y1, x2, y2);
+      float xb = interp(y, x0, y0, x2, y2);
 
-            float xb = interp(y, x0, y0, x2, y2);
+      if (xa > xb)
+        std::swap(xa, xb);
 
-            if (xa > xb) std::swap(xa, xb);
+      for (int x = (int)xa; x <= (int)xb; x++)
+      {
+        float d = lineDistance(x, y, A, B, C);
+        float t = d / maxDist;
+        if (t > 1.0f)
+          t = 1.0f;
 
-            for (int x = (int)xa; x <= (int)xb; x++)
-            {
-                float d = lineDistance(x, y, A, B, C);
-                float t = d / maxDist;
-                if (t > 1.0f) t = 1.0f;
+        float factor = 1.0f - t;
 
-                float factor = 1.0f - t;
+        uint16_t color = darkenRGB565(colorCenter, factor);
 
-                uint16_t color = darkenRGB565(colorCenter, factor);
-
-              drawPixel(x, y, color);  
-            }
-        }
+        drawPixel(x, y, color);
+      }
     }
+  }
+}
+
+void drawBackGround(const uint16_t *background)
+{
+  drawNewScreen(background);
+}
+
+static void drawNewScreen(const uint16_t *background)
+{
+  ClearBuffers();
+  isChange = 1;
+  Draw565ImageProgmem(0, 0, 240, 240, background);
+}
+
+/// Hàm chuyển đổi màu 4-bit sang 16-bit RGB565
+inline uint16_t Color4To16bit(uint16_t color4bit)
+{
+  color4bit &= 0x0F;
+  uint16_t color16bit = 0;
+  const uint16_t maxColor4bit = 0x0F;
+  const uint16_t maxColor5bit = 0x1F;
+  const uint16_t maxColor6bit = 0x3F;
+  const uint16_t red = color4bit * maxColor5bit / maxColor4bit;
+  const uint16_t green = color4bit * maxColor6bit / maxColor4bit;
+  const uint16_t blue = color4bit * maxColor5bit / maxColor4bit;
+  // color 16 bit: rrrrrggg gggbbbbb
+  color16bit |= red << 11;
+  color16bit |= green << 5;
+  color16bit |= blue;
+  return color16bit;
+}
+
+// Hàm vẽ ảnh 4-bit từ PROGMEM vào các buffer
+void Draw4bitImageProgmem(int x, int y, int width, int height, const uint8_t *pBmp)
+{
+  // Kiểm tra xem các buffer đã được cấp phát chưa
+  const int sizePixels = width * height;
+  for (int i = 1; i < sizePixels; i += 2)
+  {
+    uint8_t data = pgm_read_byte(pBmp++);
+    uint8_t leftPixel = (data & 0x0F);
+    uint8_t rightPixel = (data & 0xF0) >> 4;
+
+    int yLeft = y + (i - 1) / width;
+    int xLeft = x + (i - 1) % width;
+
+    int yRight = y + i / width;
+    int xRight = x + i % width;
+
+    drawPixel(xLeft, yLeft, Color4To16bit(leftPixel));
+    drawPixel(xRight, yRight, Color4To16bit(rightPixel));
+  }
+}
+
+// Hàm vẽ ảnh 4-bit từ PROGMEM vào các buffer
+void Draw4bitImageProgmemNoBG(int x, int y, int width, int height, const uint8_t *pBmp, uint16_t bgColor)
+{
+  // Kiểm tra xem các buffer đã được cấp phát chưa
+  const int sizePixels = width * height;
+  for (int i = 1; i < sizePixels; i += 2)
+  {
+    uint8_t data = pgm_read_byte(pBmp++);
+    uint8_t leftPixel = (data & 0x0F);
+    uint8_t rightPixel = (data & 0xF0) >> 4;
+
+    int yLeft = y + (i - 1) / width;
+    int xLeft = x + (i - 1) % width;
+
+    int yRight = y + i / width;
+    int xRight = x + i % width;
+    if (Color4To16bit(leftPixel) != bgColor)
+    {
+      drawPixel(xLeft, yLeft, Color4To16bit(leftPixel));
+    }
+    if (Color4To16bit(rightPixel) != bgColor)
+      drawPixel(xRight, yRight, Color4To16bit(rightPixel));
+  }
+}
+
+// Hàm vẽ ảnh 4-bit từ PROGMEM vào các buffer
+void Draw4bitImageProgmemNoBGInvert(int x, int y, int width, int height, const uint8_t *pBmp, uint16_t bgColor)
+{
+  // Kiểm tra xem các buffer đã được cấp phát chưa
+  const int sizePixels = width * height;
+  for (int i = 1; i < sizePixels; i += 2)
+  {
+    uint8_t data = pgm_read_byte(pBmp++);
+    uint8_t leftPixel = 0x0F - (data & 0x0F);
+    uint8_t rightPixel = 0x0F - ((data & 0xF0) >> 4);
+
+    int yLeft = y + (i - 1) / width;
+    int xLeft = x + (i - 1) % width;
+
+    int yRight = y + i / width;
+    int xRight = x + i % width;
+    if (Color4To16bit(leftPixel) != bgColor)
+    {
+      drawPixel(xLeft, yLeft, Color4To16bit(leftPixel));
+    }
+    if (Color4To16bit(rightPixel) != bgColor)
+      drawPixel(xRight, yRight, Color4To16bit(rightPixel));
+  }
+}
+
+void DrawbitImageProgmem(int x, int y, int width, int height, const uint8_t *pBmp)
+{
+  const int sizePixels = width * height;
+  for (int i = 0; i < sizePixels; i += 8)
+  {
+    uint8_t data = pgm_read_byte(pBmp++);
+    for (int j = 0; i < 8; j++)
+    {
+      uint16_t yLeft = y + (i +j) / width;
+      uint16_t xLeft = x + (i +j) % width;
+      uint16_t pixel = data &0x01;
+      data>>=1;  
+      // uint8_t pixel = data &0x80;
+      // data<<=1; 
+      pixel = pixel > 0 ? 0xFFFF : 0; 
+      drawPixel(xLeft, yLeft,pixel); 
+    }
+  }
 }

@@ -12,8 +12,6 @@ void watchInit() {
 
 void drawClockFace() {
   // Vẽ nền đồng hồ
-  Draw565ImageProgmem(0, 0, 240, 240, FACE);
-
   // Vẽ các số và vạch giờ
   for (int i = 0; i < 12; i++) {
     float angle = i * 30 * DEG_TO_RAD; // 30 độ mỗi giờ (360/12)
@@ -47,7 +45,7 @@ void drawClockHands(int hour, int minute, int second) {
 
   // Lưu lại trạng thái màn hình xung quanh khu vực đồng hồ
   // (Thay vì xóa riêng từng kim, chúng ta vẽ lại toàn bộ)
-  fillCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS - 1, BACKGROUND_COLOR);
+  // fillCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS - 1, BACKGROUND_COLOR);
 
   // Vẽ lại mặt đồng hồ
   drawClockFace();

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng điều khiển ESP32 (WebSocket + Knob + Chart)</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.css">
+  <!-- jQuery (bắt buộc cho roundSlider) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- roundSlider -->
+  <script src="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.css">
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+    .card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      padding: 25px;
+      text-align: center;
+      width: 95%;
+      max-width: 420px;
+    }
+    h2 {
+      margin-bottom: 15px;
+    }
+    .sensor {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .sensor div {
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sensor i {
+      font-size: 22px;
+      color: #0078ff;
+    }
+    #chartContainer {
+      width: 100%;
+      height: 180px;
+      margin-bottom: 25px;
+    }
+    .knob-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #brightnessKnob {
+      margin-top: 10px;
+    }
+    .footer {
+      margin-top: 15px;
+      font-size: 13px;
+      color: #666;
+    }
+	.switch {
+	  position: relative;
+	  display: inline-block;
+	  width: 60px;
+	  height: 34px;
+	  margin-top: 15px;
+	}
+
+	.switch input {
+	  opacity: 0;
+	  width: 0;
+	  height: 0;
+	}
+
+	.slider {
+	  position: absolute;
+	  cursor: pointer;
+	  top: 0; left: 0; right: 0; bottom: 0;
+	  background-color: #ccc;
+	  transition: 0.4s;
+	  border-radius: 34px;
+	}
+
+	.slider:before {
+	  position: absolute;
+	  content: "";
+	  height: 26px; width: 26px;
+	  left: 4px; bottom: 4px;
+	  background-color: white;
+	  transition: 0.4s;
+	  border-radius: 50%;
+	}
+
+	input:checked + .slider {
+	  background-color: #4cd964; /* màu xanh kiểu iPhone */
+	}
+
+	input:checked + .slider:before {
+	  transform: translateX(26px);
+	}
+
+  #preview { margin-top: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Bảng điều khiển ESP32</h2>
+    <div class="sensor">
+      <div><i>🌡️</i> <span id="temp">--</span>°C</div>
+      <div><i>💧</i> <span id="humi">--</span>%</div>
+    </div>
+
+    <div id="chartContainer">
+      <canvas id="sensorChart"></canvas>
+    </div>
+
+    <div class="knob-container">
+		<label>Độ sáng đèn</label>
+		<div id="brightnessKnob" style="position: relative; display:inline-block;"></div>
+		 <label class="switch">
+    <input type="checkbox" id="lightSwitch" checked>
+    <span class="slider"></span>
+  </label>
+	</div>
+	
+	
+	<h3>Upload ảnh và chuyển sang RGB565</h3>
+  <input type="file" id="fileInput" accept="image/*">
+  <canvas id="canvas" width="240" height="240" style="display:none;"></canvas>
+  <img id="preview" width="240" height="240" alt="Preview">
+	
+	
+    <div class="footer">© 2025 ESP32 Dashboard (WebSocket + Knob + Chart)</div>
+  </div>
+
+  <script>
+    const socket = io();
+	let lightOn = true;
+	let brightnessPercent =0; 
+    const tempEl = document.getElementById("temp");
+    const humiEl = document.getElementById("humi");
+
+	const fileInput = document.getElementById("fileInput");
+    const canvas = document.getElementById("canvas");
+    const ctxWatch = canvas.getContext("2d");
+    const preview = document.getElementById("preview");
+
+    fileInput.addEventListener("change", async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      await img.decode();
+
+      // Cắt hình vuông theo cạnh nhỏ nhất
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+
+      // Vẽ và resize về 240x240
+      ctxWatch.clearRect(0, 0, 240, 240);
+      ctxWatch.drawImage(img, sx, sy, size, size, 0, 0, 240, 240);
+
+      // Hiển thị preview
+      preview.src = canvas.toDataURL("image/png");
+
+      // Lấy dữ liệu pixel
+      const imageData = ctxWatch.getImageData(0, 0, 240, 240);
+      const rgb565 = rgbaToRgb565(imageData.data);
+
+      // Upload (ví dụ dùng fetch)
+      await uploadRgb565(rgb565);
+      alert("Upload thành công!");
+    });
+
+    // Hàm chuyển RGBA → RGB565
+    function rgbaToRgb565(rgba) {
+      const buffer = new Uint16Array(240 * 240);
+      for (let i = 0, j = 0; i < rgba.length; i += 4, j++) {
+        const r = rgba[i] >> 3;
+        const g = rgba[i + 1] >> 2;
+        const b = rgba[i + 2] >> 3;
+        buffer[j] = (r << 11) | (g << 5) | b;
+      }
+      return buffer;
+    }
+
+    // Hàm upload dữ liệu
+    async function uploadRgb565(buffer) {
+      // Chuyển sang ArrayBuffer để gửi
+      const blob = new Blob([buffer.buffer], { type: "application/octet-stream" });
+      await fetch("/upload_rgb565", {
+        method: "POST",
+        body: blob
+      });
+      // Hoặc nếu bạn dùng socket.io:
+      // socket.emit("uploadImage", buffer);
+    }
+	
+	
+    // Biểu đồ nhiệt độ & độ ẩm
+    const ctx = document.getElementById("sensorChart").getContext("2d");
+    const chartData = {
+      labels: [],
+      datasets: [
+        { label: "Nhiệt độ (°C)", data: [], borderColor: "#ff6b6b", fill: false },
+        { label: "Độ ẩm (%)", data: [], borderColor: "#4facfe", fill: false }
+      ]
+    };
+    const sensorChart = new Chart(ctx, {
+      type: "line",
+      data: chartData,
+      options: {
+        responsive: true,
+        scales: { x: { display: false }, y: { beginAtZero: true } },
+        plugins: { legend: { display: true, position: "bottom" } }
+      }
+    });
+
+
+
+    // Knob điều khiển độ sáng
+    $("#brightnessKnob").roundSlider({
+      radius: 80,
+      width: 14,
+      handleSize: "+8",
+      sliderType: "min-range",
+      value: 50,
+      circleShape: "full",
+      startAngle: 315,
+	  endAngle:225,
+      editableTooltip: true,
+      tooltipFormat: function (args) {
+		return args.value + "%";
+	  },
+      change: e => {
+        const value = e.value;
+		updateColor(value);
+		brightnessPercent = value;
+		 if (value > 0) {
+		 $("#lightSwitch").prop("checked", true);  
+		 }
+		 else
+		 {
+		  $("#lightSwitch").prop("checked", false);  
+		 }
+		socket.emit("setBrightness", { value });
+		},
+		drag: e => {
+			 this.setTooltip(value => e.value + "%");
+			 updateColor(e.value);
+		}
+    });
+
+	function updateColor(value) {
+  // Tạo màu xanh đậm dần theo % (0% = xanh nhạt, 100% = xanh đậm)
+  const g = Math.round(180 - (value * 0.9)); // giảm giá trị G để đậm dần
+  const color = rgb(50, ${g}, 255);
+
+  // Cập nhật màu cho phần range của slider
+  $(".rs-range-color").css("background", color);
+}
+	// switch on off
+	$("#lightSwitch").on("change", function () {
+  lightOn = this.checked;
+  if (lightOn) {
+    //$("#knobCenter").css("color", "#0078ff");
+    //socket.emit("toggleLight", { state: "on" });
+	$("#brightnessKnob").roundSlider("setValue", 100);
+  } else {
+   // $("#knobCenter").css("color", "#999");
+   // socket.emit("toggleLight", { state: "off" });
+   $("#brightnessKnob").roundSlider("setValue", 0);
+  }
+});
+
+    // Nhận dữ liệu cảm biến
+    socket.on("sensorData", data => {
+      tempEl.textContent = data.temp.toFixed(1);
+      humiEl.textContent = data.humi.toFixed(1);
+
+      const time = new Date().toLocaleTimeString();
+      chartData.labels.push(time);
+      chartData.datasets[0].data.push(data.temp);
+      chartData.datasets[1].data.push(data.humi);
+      if (chartData.labels.length > 10) {
+        chartData.labels.shift();
+        chartData.datasets[0].data.shift();
+        chartData.datasets[1].data.shift();
+      }
+      sensorChart.update();
+    });
+
+    // Nhận trạng thái độ sáng 
+    socket.on("brightness", value => {
+      $("#brightnessKnob").roundSlider("setValue", value);
+    });
+	
+	//upload ảnh background
+    
+  </script>
+</body>
+</html>

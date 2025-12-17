@@ -10,15 +10,14 @@
 #include "custom_led.h"
 #include "config.h"
 #include "app.h"
-#include"draw_util.h"
+#include "draw_util.h"
 #include "watch.h"
-#include"wifi_config.h"
-#include"temp_sensor.h"
-
-
+#include "wifi_config.h"
+#include "temp_sensor.h"
+#include"output.h"
 
 uint8_t state_led = 0;
-
+static uint8_t stateMachine = 0;
 MYLED led = {
     .PIN = LED};
 
@@ -34,8 +33,7 @@ MyButton btn = {
     .onLongPress = []()
     { Serial.println("Long Press");
     clearWifiConfig();
-    ESP.restart();
-}};
+    ESP.restart(); }};
 enum
 {
     CONFIG_WIFI,
@@ -43,17 +41,19 @@ enum
     WATCH,
     FOTA,
 };
-static uint8_t stateMachine = 0;
 
 void Concurrent()
 {
     // Cập nhật thời gian
     WifiConfigRun();
-    updateTime();
     MYLEDControl(&led);
     MyButtonControl(btn);
-    // Chỉ vẽ lại khi giây thay đổi
-    // TempHumRead();
+    TempHumRead();
+}
+
+void changeToWaitWifi()
+{
+    stateMachine = CONNECT_WIFI;
 }
 
 void appInit()
@@ -62,7 +62,14 @@ void appInit()
     MYLEDInit(&led);
     MyButtonInit(btn);
     TempHumSensorInit();
-    WifiConfigInit();
+    if (WifiConfigInit(changeToWaitWifi))
+    {
+        stateMachine = WATCH;
+    }
+    else
+    {
+        stateMachine = CONFIG_WIFI;
+    }
     initTime();
 }
 
@@ -70,5 +77,49 @@ void appRun()
 {
     // switch()
     Concurrent();
+    static unsigned long timeStamp = millis();
+    switch (stateMachine)
+    {
+    case CONFIG_WIFI:
+        startConfigPortal();
+        break;
+
+    case CONNECT_WIFI:
+        
+        switch (waitWifiDone())
+        {
+        case 1:
+            stateMachine = WATCH;
+            //            Serial.println(
+            break;
+
+        case 2:
+            stateMachine = CONFIG_WIFI;
+            break;
+
+        default:
+            break;
+        }
+        break;
+
+    case WATCH:
+        if (millis() - timeStamp >= 1000)
+        {
+          Serial.println("watch state");
+            drawBackGround(FACE1);
+            updateTime();
+            drawSensorInfor();
+            drawTimeAnalog();
+            timeStamp = millis();
+        }
+
+        break;
+
+    case FOTA:
+        break;
+
+    default:
+        break;
+    }
     DisplayBuffers();
 }

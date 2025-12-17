@@ -6,4 +6,6 @@
 void TempHumSensorInit(void);
 void TempHumRead(void);
 void setTempTextPos(uint16_t x, uint16_t y);
+void drawSensorInfor(); 
+void setHumTextPos(uint16_t x, uint16_t y);
 #endif

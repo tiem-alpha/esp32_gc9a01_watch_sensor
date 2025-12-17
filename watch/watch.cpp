@@ -68,9 +68,9 @@ void updateTime()
         }
         else
         {
-            if (millis() - stamp > 1000)
+            if (millis() - stamp >= 1000)
             {
-                ClearBuffers(); 
+              
                 uint32_t temp = (millis() - stamp)/1000;//ms
                 now += temp;
                 stamp += temp*1000;
@@ -82,10 +82,13 @@ void updateTime()
                 hour = timeinfo->tm_hour % 12;
                 minute = timeinfo->tm_min;
                 second = timeinfo->tm_sec;
-                
-                drawClockHands(hour, minute, second);
-                TempHumRead();
             }
         }
     }
+}
+
+
+void drawTimeAnalog()
+{
+    drawClockHands(hour, minute, second);
 }

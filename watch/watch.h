@@ -3,4 +3,5 @@
 #include"data_type.h"
 void initTime(); 
 void updateTime();
+void drawTimeAnalog();
 #endif

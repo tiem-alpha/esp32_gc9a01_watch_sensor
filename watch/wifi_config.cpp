@@ -141,6 +141,7 @@ void handleSave()
     pass = server.arg("pass");
     ssid.trim();
     pass.trim();
+    if(pass.length() ==0 || ssid.length() ==0) return; 
     Serial.print("Connecting to ");
     Serial.print(ssid);
     Serial.print(" pass ");

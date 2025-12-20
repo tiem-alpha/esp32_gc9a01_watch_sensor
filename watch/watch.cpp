@@ -31,7 +31,7 @@ static uint8_t getTime()
     second = timeinfo.tm_sec;
     stamp = millis();
      now  = mktime(&timeinfo);
-    Serial.println(now);
+    // Serial.println(now);
     return 1;
 }
 
@@ -41,7 +41,7 @@ void initTime()
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     if (getConnected() == 1)
     {
-        while (1)
+        for(int i =0 ;i<20 ;i++)
         {
             if (getTime() == 1)
             {
@@ -77,8 +77,8 @@ void updateTime()
                 struct tm* timeinfo = localtime(&now);
 
                 char buffer[30];
-                strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
-                Serial.println(buffer);
+                // strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+                // Serial.println(buffer);
                 hour = timeinfo->tm_hour % 12;
                 minute = timeinfo->tm_min;
                 second = timeinfo->tm_sec;

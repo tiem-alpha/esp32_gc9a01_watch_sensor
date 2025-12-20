@@ -226,7 +226,7 @@ Serial.println("init ------------------------ boot");
   #if !defined(TFT_PARALLEL_8_BIT)  
     #if defined (TFT_MOSI) && !defined (TFT_SPI_OVERLAP) && !defined(ARDUINO_ARCH_RP2040) && !defined (ARDUINO_ARCH_MBED)
       spi.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, -1); // This will set MISO to input
-      Serial.println("=======================");
+      // Serial.println("=======================");
     #else
       spi.begin(); // This will set MISO to input
     #endif

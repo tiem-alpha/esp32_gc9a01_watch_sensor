@@ -10,9 +10,9 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 char tempStr[10];
 char humStr[10];
 uint16_t hum_x = 100;
-uint16_t hum_y = 140;
+uint16_t hum_y = 170;
 uint16_t temp_x = 100;
-uint16_t temp_y = 130;
+uint16_t temp_y = 140;
 void TempHumSensorInit()
 {
     Serial.println("SHT31 test");

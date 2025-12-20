@@ -7,7 +7,7 @@ static void drawHourNumber();
 void watchInit() {
   ScreenInit();
   drawClockFace();
-  DisplayBuffers();
+  // DisplayBuffers();
 }
 
 void drawClockFace() {

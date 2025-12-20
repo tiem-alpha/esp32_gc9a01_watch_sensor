@@ -50,6 +50,6 @@ void MYLEDControl(MYLED *led)
 //    {
         uint8_t  value = (led->current*255/100); 
         analogWrite(led->PIN, value);
-         Serial.printf("bang analog %d\n",value);
+        //  Serial.printf("bang analog %d\n",value);
 //    }
 }

@@ -2,6 +2,7 @@
 #include "output.h"
 #include <TFT_eSPI.h>
 #include "FontMaker.h"
+#include "data_type.h"
 
 // Khởi tạo đối tượng TFT
 TFT_eSPI tft = TFT_eSPI();
@@ -547,16 +548,12 @@ static void drawNewScreen(const uint16_t *background)
 }
 
 /// Hàm chuyển đổi màu 4-bit sang 16-bit RGB565
-inline uint16_t Color4To16bit(uint16_t color4bit)
+inline uint16_t Color4To16bit(uint8_t color4bit)
 {
-  color4bit &= 0x0F;
   uint16_t color16bit = 0;
-  const uint16_t maxColor4bit = 0x0F;
-  const uint16_t maxColor5bit = 0x1F;
-  const uint16_t maxColor6bit = 0x3F;
-  const uint16_t red = color4bit * maxColor5bit / maxColor4bit;
-  const uint16_t green = color4bit * maxColor6bit / maxColor4bit;
-  const uint16_t blue = color4bit * maxColor5bit / maxColor4bit;
+  const uint16_t red = color4bit << 1;
+  const uint16_t green = color4bit << 2;
+  const uint16_t blue = color4bit << 1;
   // color 16 bit: rrrrrggg gggbbbbb
   color16bit |= red << 11;
   color16bit |= green << 5;
@@ -564,10 +561,45 @@ inline uint16_t Color4To16bit(uint16_t color4bit)
   return color16bit;
 }
 
+inline uint16_t Color8To16bit(uint8_t color)
+{
+  uint16_t color16bit = 0;
+  const uint16_t red = color >> 3;
+  const uint16_t green = color >> 2;
+  const uint16_t blue = color >> 3;
+  // color 16 bit: rrrrrggg gggbbbbb
+  color16bit |= red << 11;
+  color16bit |= green << 5;
+  color16bit |= blue;
+  return color16bit;
+}
+
+inline uint16_t ColorGrayTo16bit(uint8_t data, uint16_t color)
+{
+    uint16_t color16bit = 0;
+    // R = R0 * g / 255
+// G = G0 * g / 255
+// B = B0 * g / 255
+   uint16_t red = (color)>>11;// 5bit
+   uint16_t green = (color >> 5)&0x3F; // 6bit
+   uint16_t blue = color &0x1F;//5 bit 
+   red = (red * data)/255; 
+   green = (green*data)/255; 
+   blue = (blue*data/255); 
+  // red = (uint16_t) tem
+  // color 16 bit: rrrrrggg gggbbbbb
+  color16bit |= red << 11;
+  color16bit |= green << 5;
+  color16bit |= blue;
+  return color16bit;
+  }
 // Hàm vẽ ảnh 4-bit từ PROGMEM vào các buffer
-void Draw4bitImageProgmem(int x, int y, int width, int height, const uint8_t *pBmp)
+void Draw4bitImageProgmem(int x, int y, Image4Bit image)
 {
   // Kiểm tra xem các buffer đã được cấp phát chưa
+  int width = image.width;
+  int height = image.height;
+  const uint8_t *pBmp = image.data;
   const int sizePixels = width * height;
   for (int i = 1; i < sizePixels; i += 2)
   {
@@ -585,54 +617,36 @@ void Draw4bitImageProgmem(int x, int y, int width, int height, const uint8_t *pB
     drawPixel(xRight, yRight, Color4To16bit(rightPixel));
   }
 }
-
+// int indexTemp = 1;
 // Hàm vẽ ảnh 4-bit từ PROGMEM vào các buffer
-void Draw4bitImageProgmemNoBG(int x, int y, int width, int height, const uint8_t *pBmp, uint16_t bgColor)
+void Draw4bitImageProgmemNoBG(int x, int y, Image4Bit image)
 {
   // Kiểm tra xem các buffer đã được cấp phát chưa
-  const int sizePixels = width * height;
-  for (int i = 1; i < sizePixels; i += 2)
+  const uint8_t *pBmp = image.data;
+  const int sizePixels = image.width * image.height;
+  int indexTemp = 1;
+  while (indexTemp < sizePixels)
   {
     uint8_t data = pgm_read_byte(pBmp++);
     uint8_t leftPixel = (data & 0x0F);
     uint8_t rightPixel = (data & 0xF0) >> 4;
 
-    int yLeft = y + (i - 1) / width;
-    int xLeft = x + (i - 1) % width;
+    int yLeft = y + (indexTemp - 1) / image.width;
+    int xLeft = x + (indexTemp - 1) % image.width;
 
-    int yRight = y + i / width;
-    int xRight = x + i % width;
-    if (Color4To16bit(leftPixel) != bgColor)
+    int yRight = y + indexTemp / image.width;
+    int xRight = x + indexTemp % image.width;
+    uint16_t color = Color4To16bit(leftPixel);
+    if (color > 0)
     {
-      drawPixel(xLeft, yLeft, Color4To16bit(leftPixel));
+      drawPixel(xLeft, yLeft, color);
     }
-    if (Color4To16bit(rightPixel) != bgColor)
-      drawPixel(xRight, yRight, Color4To16bit(rightPixel));
-  }
-}
-
-// Hàm vẽ ảnh 4-bit từ PROGMEM vào các buffer
-void Draw4bitImageProgmemNoBGInvert(int x, int y, int width, int height, const uint8_t *pBmp, uint16_t bgColor)
-{
-  // Kiểm tra xem các buffer đã được cấp phát chưa
-  const int sizePixels = width * height;
-  for (int i = 1; i < sizePixels; i += 2)
-  {
-    uint8_t data = pgm_read_byte(pBmp++);
-    uint8_t leftPixel = 0x0F - (data & 0x0F);
-    uint8_t rightPixel = 0x0F - ((data & 0xF0) >> 4);
-
-    int yLeft = y + (i - 1) / width;
-    int xLeft = x + (i - 1) % width;
-
-    int yRight = y + i / width;
-    int xRight = x + i % width;
-    if (Color4To16bit(leftPixel) != bgColor)
+    color = Color4To16bit(rightPixel);
+    if (color > 0)
     {
-      drawPixel(xLeft, yLeft, Color4To16bit(leftPixel));
+      drawPixel(xRight, yRight, color);
     }
-    if (Color4To16bit(rightPixel) != bgColor)
-      drawPixel(xRight, yRight, Color4To16bit(rightPixel));
+    indexTemp += 2;
   }
 }
 
@@ -644,14 +658,62 @@ void DrawbitImageProgmem(int x, int y, int width, int height, const uint8_t *pBm
     uint8_t data = pgm_read_byte(pBmp++);
     for (int j = 0; i < 8; j++)
     {
-      uint16_t yLeft = y + (i +j) / width;
-      uint16_t xLeft = x + (i +j) % width;
-      uint16_t pixel = data &0x01;
-      data>>=1;  
+      uint16_t yLeft = y + (i + j) / width;
+      uint16_t xLeft = x + (i + j) % width;
+      uint16_t pixel = data & 0x01;
+      data >>= 1;
       // uint8_t pixel = data &0x80;
-      // data<<=1; 
-      pixel = pixel > 0 ? 0xFFFF : 0; 
-      drawPixel(xLeft, yLeft,pixel); 
+      // data<<=1;
+      pixel = pixel > 0 ? 0xFFFF : 0;
+      drawPixel(xLeft, yLeft, pixel);
+    }
+  }
+}
+
+void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image)
+{
+  // Kiểm tra xem các buffer đã được cấp phát chưa
+  const uint8_t *pBmp = image.data;
+  uint16_t width = image.width ;
+  uint16_t height = image.height ;
+  // Serial.println((width*height));
+  // const int sizePixels = width * height;
+  uint16_t w = 0;
+  uint16_t h = 0;
+  for (h = 0; h < height; h++)
+  {
+    for (w = 0; w < width; w++)
+    {
+      uint8_t data = pgm_read_byte((pBmp + h * image.width + w));
+      uint16_t color = Color8To16bit(data);
+      if (color > 0)
+      {
+        drawPixel(x+w, y+h, color);
+      }
+    }
+  }
+}
+
+void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image, uint16_t color)
+{
+  // Kiểm tra xem các buffer đã được cấp phát chưa
+  const uint8_t *pBmp = image.data;
+  uint16_t width = image.width ;
+  uint16_t height = image.height ;
+  // const int sizePixels = width * height;
+  // Serial.println((width*height));
+  uint16_t w = 0;
+  uint16_t h = 0;
+  for (h = 0; h < height; h++)
+  {
+    for (w = 0; w < width; w++)
+    {
+      uint8_t data = pgm_read_byte((pBmp + h * image.width + w));
+      uint16_t colorn = ColorGrayTo16bit(data, color);
+      if (colorn > 0)
+      {
+        drawPixel(x+w, y+h, colorn);
+      }
     }
   }
 }

@@ -650,6 +650,30 @@ void Draw4bitImageProgmemNoBG(int x, int y, Image4Bit image)
   }
 }
 
+void Draw4bitImageProgmemNoBGUpgrade(int x, int y, Image4Bit image)
+{
+  // Kiểm tra xem các buffer đã được cấp phát chưa
+  const uint8_t *pBmp = image.data;
+  uint16_t width = image.width/2 ;
+  uint16_t height = image.height/2 ;
+  // Serial.println((width*height));
+  // const int sizePixels = width * height;
+  uint16_t w = 0;
+  uint16_t h = 0;
+  for (h = 0; h < height; h++)
+  {
+    for (w = 0; w < width; w++)
+    {
+      uint8_t data = pgm_read_byte((pBmp + h * image.width + w));
+      uint16_t color = Color8To16bit(data);
+      if (color > 0)
+      {
+        drawPixel(x+w, y+h, color);
+      }
+    }
+  }
+}
+
 void DrawbitImageProgmem(int x, int y, int width, int height, const uint8_t *pBmp)
 {
   const int sizePixels = width * height;

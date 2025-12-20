@@ -4,4 +4,5 @@
 void initTime(); 
 void updateTime();
 void drawTimeAnalog();
+void drawDigital();
 #endif

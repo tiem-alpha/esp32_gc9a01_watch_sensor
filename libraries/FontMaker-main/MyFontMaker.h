@@ -17,7 +17,7 @@ typedef struct
 
 
 extern const MyFont_typedef VN;
-extern const MyFont_typedef vn_8;
+extern const MyFont_typedef Arial_8;
 //auto add here
 
 

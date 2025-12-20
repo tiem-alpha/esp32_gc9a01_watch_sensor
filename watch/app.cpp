@@ -15,8 +15,7 @@
 #include "wifi_config.h"
 #include "temp_sensor.h"
 #include  "output.h"
-#include  "image_data.h"
-#include "image_eight_data.h"
+
 
 uint8_t state_led = 0;
 static uint8_t stateMachine = 0;
@@ -80,7 +79,7 @@ void appRun()
 {
     // switch()
     Concurrent();
-    static uint8_t count =0;
+    // static uint8_t count =0;
     static unsigned long timeStamp = millis();
     switch (stateMachine)
     {
@@ -113,9 +112,9 @@ void appRun()
             drawBackGround(FACE1);
             updateTime();
             drawSensorInfor();
-            drawTimeAnalog();
-            Draw8bitImageProgmemNoBG(100,100, images8[count],YELLOW);
-            count = (count+1)%10;
+            // drawTimeAnalog();
+             drawDigital();
+
             timeStamp = millis();
         }
 

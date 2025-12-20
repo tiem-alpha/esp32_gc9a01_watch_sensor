@@ -27,6 +27,7 @@ void Draw565ImageProgmem(int x, int y, int width, int height, const uint16_t* pB
 void Draw4bitImageProgmemNoBG(int x, int y,  Image4Bit image);
 void Draw4bitImageProgmem(int x, int y,  Image4Bit image);
 void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image);
+void Draw4bitImageProgmemNoBGUpgrade(int x, int y, Image4Bit image);
 void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image, uint16_t color);
 void DrawbitImageProgmem(int x, int y, int width, int height, const uint8_t* pBmp);
 // void Draw4bitImageProgmemNoBGInvert(int x, int y, int width, int height, const uint8_t *pBmp, uint16_t bgColor);

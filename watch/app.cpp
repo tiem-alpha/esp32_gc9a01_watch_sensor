@@ -14,8 +14,7 @@
 #include "watch.h"
 #include "wifi_config.h"
 #include "temp_sensor.h"
-#include  "output.h"
-
+#include "output.h"
 
 uint8_t state_led = 0;
 static uint8_t stateMachine = 0;
@@ -32,9 +31,15 @@ MyButton btn = {
     .onDoubleClick = []()
     { Serial.println("Double Click"); },
     .onLongPress = []()
-    { Serial.println("Long Press");
-    clearWifiConfig();
-    ESP.restart(); }};
+    { Serial.println("Long Press"); },
+    .onFSPress = []()
+    {
+        Serial.println("Factory Reset"); 
+        clearWifiConfig();
+        ESP.restart(); 
+    }
+};
+
 enum
 {
     CONFIG_WIFI,
@@ -72,7 +77,6 @@ void appInit()
     {
         stateMachine = CONFIG_WIFI;
     }
-    
 }
 
 void appRun()
@@ -88,7 +92,7 @@ void appRun()
         break;
 
     case CONNECT_WIFI:
-        
+
         switch (waitWifiDone())
         {
         case 1:
@@ -108,12 +112,12 @@ void appRun()
     case WATCH:
         if (millis() - timeStamp >= 1000)
         {
-        //   Serial.println("watch state");
+            //   Serial.println("watch state");
             drawBackGround(FACE1);
             updateTime();
             drawSensorInfor();
             // drawTimeAnalog();
-             drawDigital();
+            drawDigital();
 
             timeStamp = millis();
         }

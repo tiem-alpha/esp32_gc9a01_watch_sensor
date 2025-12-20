@@ -9,10 +9,10 @@ float h; //= sht31.readHumidity();
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 char tempStr[10];
 char humStr[10];
-uint16_t hum_x = 80;
-uint16_t hum_y = 200;
+uint16_t hum_x = 70;
+uint16_t hum_y = 190;
 uint16_t temp_x = 130;
-uint16_t temp_y = 200;
+uint16_t temp_y = 190;
 void TempHumSensorInit()
 {
     Serial.println("SHT31 test");

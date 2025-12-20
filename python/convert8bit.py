@@ -56,17 +56,28 @@ def save_to_header_file(images_data, header_file_path):
 
 
 def main():
+    # project_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # image_folder = os.path.join(project_folder, 'image')
+    # source_path = os.path.join(project_folder, 'watch')
+    # header_file_path = os.path.join(source_path, 'image_eight_data.h')
+    # images_data = []
     project_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     image_folder = os.path.join(project_folder, 'image')
     source_path = os.path.join(project_folder, 'watch')
     header_file_path = os.path.join(source_path, 'image_eight_data.h')
+
     images_data = []
 
-    for i in range(10):
-        image_path = os.path.join(image_folder, f'{i}.png')
-        print(f'anh {i}')
+    for filename in os.listdir(image_folder):
+        if not filename.lower().endswith('.png'):
+            continue
+
+        image_path = os.path.join(image_folder, filename)
+        # image_path = os.path.join(image_folder, f'{i}.png')
         pixel_array, width, height = convert_image_to_8bit_array(image_path)
-        name = f'image_{i}'
+        # name = f'image_{i}'
+        name = os.path.splitext(filename)[0]
+        name = f'image_{name}'
         images_data.append((name, pixel_array, width, height))
         # convert8bittorgb888(pixel_array,width,height)
 

@@ -1,14 +1,13 @@
-#pragma once 
-#include"data_type.h"
+#pragma once
+#include "data_type.h"
 
-#define RED     0xF800
-#define GREEN   0x07E0
-#define CYAN    0x07FF
+#define RED 0xF800
+#define GREEN 0x07E0
+#define CYAN 0x07FF
 #define MAGENTA 0xF81F
-#define YELLOW  0xFFE0
-#define BLACK  0x0000
+#define YELLOW 0xFFE0
+#define BLACK 0x0000
 #define WHITE 0xFFFF
-
 
 // Định nghĩa kích thước màn hình
 #define SCREEN_WIDTH 240
@@ -17,27 +16,28 @@
 
 #define GRADIENT_SPEED (1.5)
 
-// bool InitBuffers(); 
-// void FreeBuffers() ; 
+// bool InitBuffers();
+// void FreeBuffers() ;
 void ScreenInit();
-void ClearBuffers(); 
-void DisplayBuffers(); 
+void ClearBuffers();
+void DisplayBuffers();
 void drawBackGround(const uint16_t *background);
-void Draw565ImageProgmem(int x, int y, int width, int height, const uint16_t* pBmp); 
-void Draw4bitImageProgmemNoBG(int x, int y,  Image4Bit image);
-void Draw4bitImageProgmem(int x, int y,  Image4Bit image);
+void Draw565ImageProgmem(int x, int y, int width, int height, const uint16_t *pBmp);
+void Draw4bitImageProgmemNoBG(int x, int y, Image4Bit image);
+void Draw4bitImageProgmem(int x, int y, Image4Bit image);
 void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image);
 void Draw4bitImageProgmemNoBGUpgrade(int x, int y, Image4Bit image);
 void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image, uint16_t color);
-void DrawbitImageProgmem(int x, int y, int width, int height, const uint8_t* pBmp);
+void DrawbitImageProgmem(int x, int y, int width, int height, const uint8_t *pBmp);
 // void Draw4bitImageProgmemNoBGInvert(int x, int y, int width, int height, const uint8_t *pBmp, uint16_t bgColor);
-void getBufferAndOffset(int16_t y, uint16_t** buffer, int16_t* offset); 
-void drawPixel(int16_t x, int16_t y, uint16_t color); 
-void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color); 
+void getBufferAndOffset(int16_t y, uint16_t **buffer, int16_t *offset);
+void drawPixel(int16_t x, int16_t y, uint16_t color);
+void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
 void drawHorizontalLine(int16_t x, int16_t y, int16_t w, uint16_t color);
-void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) ; 
-void swap(int16_t* a, int16_t* b); 
-void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color); 
-void DrawString(int x , int y, const char* str, uint16_t color);
+void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+void swap(int16_t *a, int16_t *b);
+void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+void DrawString(int x, int y, const char *str, uint16_t color);
 void fillTriangleGradient(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
-                            uint16_t x2, uint16_t y2, uint16_t colorCenter);
+                          uint16_t x2, uint16_t y2, uint16_t colorCenter);
+void DrawSmallString(int x, int y, const char *str, uint16_t color);

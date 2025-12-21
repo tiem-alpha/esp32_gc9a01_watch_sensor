@@ -130,7 +130,7 @@ void drawDigital()
         Draw8bitImageProgmemNoBG(x, y, images8[hh]);
     x += images8[hh].width + padding;
     Draw8bitImageProgmemNoBG(x, y, images8[hl]);
-    x += images8[hh].width + padding;
+    x += images8[hl].width + padding;
     Draw8bitImageProgmemNoBG(x, y, images8[10]);
     x += images8[10].width + padding;
     Draw8bitImageProgmemNoBG(x, y, images8[minh]);

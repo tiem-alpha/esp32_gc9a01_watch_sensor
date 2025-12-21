@@ -141,7 +141,10 @@ void handleSave()
     pass = server.arg("pass");
     ssid.trim();
     pass.trim();
-    if(pass.length() ==0 || ssid.length() ==0) return; 
+    if(pass.length() ==0 || ssid.length() ==0) {
+       handleRoot();
+      return; 
+    }
     Serial.print("Connecting to ");
     Serial.print(ssid);
     Serial.print(" pass ");
@@ -203,7 +206,7 @@ void startConfigPortal()
     server.on("/", handleRoot);
     server.on("/save", handleSave);
     server.begin();
-    WriteLog("http://192.168.4.1", 18);
+    // WriteLog("http://192.168.4.1", 18);
     Serial.println("WebServer đã chạy, mở: http://192.168.4.1");
     }
    

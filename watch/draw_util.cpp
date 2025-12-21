@@ -429,8 +429,9 @@ void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, in
 
 void DrawString(int x, int y, const char *str, uint16_t color)
 {
+  myfont.setSize(1);
   myfont.set_font(VN);
-  myfont.print(x, y, str, color, BLACK);
+  myfont.print(x, y, str, color);
 }
 
 static uint16_t getRGB565(uint8_t r, uint8_t g, uint8_t b)
@@ -747,5 +748,6 @@ void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image, uint16_t color)
 void DrawSmallString(int x, int y, const char *str, uint16_t color)
 {
   myfont.set_font(ari);
-  myfont.print(x, y, str, color, BLACK);
+  myfont.setSize(1);
+  myfont.print(x, y, str, color);
 }

@@ -13,18 +13,18 @@ void watchInit() {
 void drawClockFace() {
   // Vẽ nền đồng hồ
   // Vẽ các số và vạch giờ
-  for (int i = 0; i < 12; i++) {
-    float angle = i * 30 * DEG_TO_RAD; // 30 độ mỗi giờ (360/12)
+  // for (int i = 0; i < 12; i++) {
+  //   float angle = i * 30 * DEG_TO_RAD; // 30 độ mỗi giờ (360/12)
 
-    // Vẽ vạch giờ to hơn
-    int markOuterX = CLOCK_CENTER_X + sin(angle) * CLOCK_RADIUS;
-    int markOuterY = CLOCK_CENTER_Y - cos(angle) * CLOCK_RADIUS;
-    int markInnerX = CLOCK_CENTER_X + sin(angle) * (CLOCK_RADIUS - 8); // Vạch giờ dài hơn
-    int markInnerY = CLOCK_CENTER_Y - cos(angle) * (CLOCK_RADIUS - 8);
+  //   // Vẽ vạch giờ to hơn
+  //   int markOuterX = CLOCK_CENTER_X + sin(angle) * CLOCK_RADIUS;
+  //   int markOuterY = CLOCK_CENTER_Y - cos(angle) * CLOCK_RADIUS;
+  //   int markInnerX = CLOCK_CENTER_X + sin(angle) * (CLOCK_RADIUS - 8); // Vạch giờ dài hơn
+  //   int markInnerY = CLOCK_CENTER_Y - cos(angle) * (CLOCK_RADIUS - 8);
 
-    drawLine(markOuterX, markOuterY, markInnerX, markInnerY, HOUR_MARK_COLOR);
+  //   drawLine(markOuterX, markOuterY, markInnerX, markInnerY, HOUR_MARK_COLOR);
 
-  }
+  // }
 
   // Vẽ các vạch phút
   for (int i = 0; i < 60; i++) {
@@ -41,7 +41,7 @@ void drawClockFace() {
 
 }
 
-void drawClockHands(int hour, int minute, int second) {
+void drawClockHands(int hour, int minute, int second, uint16_t hourColor, uint16_t minColor, uint16_t secColor) {
 
   // Lưu lại trạng thái màn hình xung quanh khu vực đồng hồ
   // (Thay vì xóa riêng từng kim, chúng ta vẽ lại toàn bộ)
@@ -56,13 +56,13 @@ void drawClockHands(int hour, int minute, int second) {
   float second_angle = second * 6 * DEG_TO_RAD; // 6 độ mỗi giây
 
   // Vẽ kim giờ (hình tam giác nhọn) - tất cả màu bạc
-  drawPointedHand(hour_angle, HOUR_HAND_LENGTH, HOUR_HAND_WIDTH, HOUR_HAND_TAIL, HOUR_COLOR);
+  drawPointedHand(hour_angle, HOUR_HAND_LENGTH, HOUR_HAND_WIDTH, HOUR_HAND_TAIL, hourColor);
 
   // Vẽ kim phút (hình tam giác nhọn) - màu bạc
-  drawPointedHand(minute_angle, MINUTE_HAND_LENGTH, MINUTE_HAND_WIDTH, MINUTE_HAND_TAIL, MIN_COLOR);
+  drawPointedHand(minute_angle, MINUTE_HAND_LENGTH, MINUTE_HAND_WIDTH, MINUTE_HAND_TAIL, minColor);
 
   // Vẽ kim giây (hình tam giác nhọn mảnh hơn) - màu bạc
-  drawPointedHand(second_angle, SECOND_HAND_LENGTH, SECOND_HAND_WIDTH, SECOND_HAND_TAIL, SEC_COLOR);
+  drawPointedHand(second_angle, SECOND_HAND_LENGTH, SECOND_HAND_WIDTH, SECOND_HAND_TAIL, secColor);
 
   // Vẽ lại điểm trung tâm
   fillCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, 3, CENTER_COLOR); // Tăng kích thước điểm trung tâm
@@ -127,8 +127,8 @@ void drawHourNumber(){
     char hourStr[3];
     sprintf(hourStr, "%d", hourNum);
 
-    int numX = CLOCK_CENTER_X + sin(angle) * (CLOCK_RADIUS - 15); // Vị trí số
-    int numY = CLOCK_CENTER_Y - cos(angle) * (CLOCK_RADIUS - 15);
+    int numX = CLOCK_CENTER_X + sin(angle) * (CLOCK_RADIUS - 8); // Vị trí số
+    int numY = CLOCK_CENTER_Y - cos(angle) * (CLOCK_RADIUS - 8);
 
     // Canh giữa số
     int textWidth = hourNum < 10 ? 8 : 16;
@@ -138,4 +138,3 @@ void drawHourNumber(){
     }
    
 }
-

@@ -1,4 +1,5 @@
 #pragma once
+#include<data_type.h>
 
 #define CLOCK_CENTER_X (SCREEN_WIDTH / 2)
 #define CLOCK_CENTER_Y (SCREEN_HEIGHT / 2)
@@ -10,7 +11,7 @@
 #define CLOCK_FACE_COLOR 0xFFFF
 #define HOUR_MARK_COLOR SILVER_COLOR
 #define NUMBER_COLOR SILVER_COLOR
-#define CENTER_COLOR 0x0000
+#define CENTER_COLOR SILVER_COLOR
 
 #define HOUR_COLOR 0x2eac
 #define MIN_COLOR 0x2eac
@@ -33,7 +34,7 @@
 
 void watchInit(); 
 void drawClockFace(); 
-void drawClockHands(int hour, int minute, int second) ; 
+void drawClockHands(int hour, int minute, int second, uint16_t hourColor, uint16_t minColor, uint16_t secColor);
 
 
 // int hour, minute, second;

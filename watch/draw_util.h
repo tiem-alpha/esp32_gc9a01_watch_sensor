@@ -41,3 +41,4 @@ void DrawString(int x, int y, const char *str, uint16_t color);
 void fillTriangleGradient(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
                           uint16_t x2, uint16_t y2, uint16_t colorCenter);
 void DrawSmallString(int x, int y, const char *str, uint16_t color);
+void drawBackGround(const char *path);

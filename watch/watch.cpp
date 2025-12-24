@@ -5,6 +5,7 @@
 #include "temp_sensor.h"
 #include "image_data.h"
 #include "image_eight_data.h"
+#include"temp_sensor.h"
 
 // Thông tin NTP Server
 const char *ntpServer = "pool.ntp.org";
@@ -16,11 +17,15 @@ int hour, minute, second;
 char date[21];
 
 static unsigned long stamp;
-static uint8_t isConnected;
-static uint8_t isHaveTime;
+static uint8_t isConnected, analog = 0;
+static uint8_t isHaveTime = 0;
 static uint8_t getDate = 0;
 time_t now;
 
+static uint16_t hourColor = HOUR_COLOR;
+static uint16_t secColor = SEC_COLOR;
+static uint16_t minColor = MIN_COLOR; 
+static uint16_t spaceColor = HOUR_COLOR;
 const char *thu_vn[] = {
     "CN", "T2", "T3",
     "T4", "T5", "T6", "T7"};
@@ -39,7 +44,6 @@ static uint8_t getTime()
     second = timeinfo.tm_sec;
     stamp = millis();
     now = mktime(&timeinfo);
-    // Serial.println(now);
     return 1;
 }
 
@@ -49,7 +53,7 @@ void initTime()
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     if (getConnected() == 1)
     {
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 3; i++)
         {
             if (getTime() == 1)
             {
@@ -62,57 +66,59 @@ void initTime()
     }
 }
 
-void updateTime()
+
+void getCloudTime()
 {
+    if(  isHaveTime ==1) return; 
     if (getConnected() == 1)
     {
-        if (isHaveTime == 0)
+        for (int i = 0; i < 4; i++)
         {
             if (getTime() == 1)
             {
                 isHaveTime = 1;
+
+                break;
             }
-        }
-        else
-        {
-            if (millis() - stamp >= 1000)
-            {
-
-                uint32_t temp = (millis() - stamp) / 1000; // ms
-                now += temp;
-                stamp += temp * 1000;
-                struct tm *timeinfo = localtime(&now);
-
-                // char buffer[30];
-
-                hour = timeinfo->tm_hour; // % 12;
-                if (hour == 0)
-                {
-                    getDate = 0;
-                }
-                if (getDate == 0)
-                {
-                    // strftime(date, sizeof(date), "%A, %d/%m/%Y", timeinfo);
-                    snprintf(date, sizeof(date),
-                             "%s, %02d/%02d/%04d",
-                             thu_vn[timeinfo->tm_wday],
-                             timeinfo->tm_mday,
-                             timeinfo->tm_mon + 1,
-                             timeinfo->tm_year + 1900);
-                    getDate = 1;
-                }
-                // Serial.println(date);
-                minute = timeinfo->tm_min;
-                second = timeinfo->tm_sec;
-            }
+            delay(100);
         }
     }
+}
+void updateTime()
+{
+
+    if (millis() - stamp >= 1000)
+    {
+
+        uint32_t temp = (millis() - stamp) / 1000; // ms
+        now += temp;
+        stamp += temp * 1000;
+        struct tm *timeinfo = localtime(&now);
+
+        // char buffer[30];
+
+        hour = timeinfo->tm_hour; // % 12;
+
+        // strftime(date, sizeof(date), "%A, %d/%m/%Y", timeinfo);
+        snprintf(date, sizeof(date),
+                 "%s, %02d/%02d/%04d",
+                 thu_vn[timeinfo->tm_wday],
+                 timeinfo->tm_mday,
+                 timeinfo->tm_mon + 1,
+                 timeinfo->tm_year + 1900);
+
+        // Serial.println(date);
+        minute = timeinfo->tm_min;
+        second = timeinfo->tm_sec;
+    }
+    //     }
+    // }
 }
 
 void drawTimeAnalog()
 {
     hour = hour % 12;
-    drawClockHands(hour, minute, second);
+    drawClockHands(hour, minute, second, hourColor, minColor, secColor);
 }
 
 void drawDigital()
@@ -127,20 +133,66 @@ void drawDigital()
     int x = 20;
     int y = 90;
     if (hh != 0)
-        Draw8bitImageProgmemNoBG(x, y, images8[hh]);
+        Draw8bitImageProgmemNoBG(x, y, images8[hh], hourColor);
     x += images8[hh].width + padding;
-    Draw8bitImageProgmemNoBG(x, y, images8[hl]);
+    Draw8bitImageProgmemNoBG(x, y, images8[hl], hourColor);
     x += images8[hl].width + padding;
-    Draw8bitImageProgmemNoBG(x, y, images8[10]);
+    Draw8bitImageProgmemNoBG(x, y, images8[10], spaceColor);
     x += images8[10].width + padding;
-    Draw8bitImageProgmemNoBG(x, y, images8[minh]);
+    Draw8bitImageProgmemNoBG(x, y, images8[minh], minColor);
     x += images8[minh].width + padding;
-    Draw8bitImageProgmemNoBG(x, y, images8[minl]);
+    Draw8bitImageProgmemNoBG(x, y, images8[minl], minColor);
     x += images8[minl].width + padding;
-    Draw8bitImageProgmemNoBG(x, y, images8[10]);
+    Draw8bitImageProgmemNoBG(x, y, images8[10], spaceColor);
     x += images8[10].width + padding;
-    Draw8bitImageProgmemNoBG(x, y, images8[sech]);
+    Draw8bitImageProgmemNoBG(x, y, images8[sech], secColor);
     x += images8[sech].width + padding;
-    Draw8bitImageProgmemNoBG(x, y, images8[secl]);
+    Draw8bitImageProgmemNoBG(x, y, images8[secl],secColor);
     DrawSmallString(60, 20, date, WHITE);
+}
+
+void setTime(time_t epoch)
+{
+    // if(  isHaveTime ==1) return; 
+    now = (time_t)epoch;
+}
+
+uint8_t getAnalog()
+{
+    return analog;
+}
+
+void setAnalog(uint8_t ana)
+{
+    Serial.printf("set analog %d\n",ana);
+    analog = ana;
+}
+void drawWatchFace()
+{
+    if (analog == 0)
+    {
+        drawSensorInfor();
+        drawDigital();
+    }
+    else
+    {
+        drawTimeAnalog();
+    }
+}
+
+void setHourColor(uint16_t color){
+    hourColor =color;
+    spaceColor = color;
+}
+
+void setMinColor(uint16_t color){
+    minColor =color;
+}
+
+void setSecColor(uint16_t color){
+    secColor =color;
+}
+
+void setSpaceColor(uint16_t color){
+    spaceColor =color;
 }

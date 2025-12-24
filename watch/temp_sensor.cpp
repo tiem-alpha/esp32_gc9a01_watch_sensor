@@ -15,7 +15,6 @@ uint16_t temp_x = 130;
 uint16_t temp_y = 190;
 void TempHumSensorInit()
 {
-    Serial.println("SHT31 test");
     if (!sht31.begin(0x44))
     { // Set to 0x45 for alternate i2c addr
         Serial.println("Couldn't find SHT31");
@@ -69,7 +68,7 @@ void setTempTextPos(uint16_t x, uint16_t y)
 {
     // hum_x = x;
     // hum_y = y;
-    temp_x = x; 
+    temp_x = x;
     temp_y = y;
 }
 
@@ -83,4 +82,14 @@ void drawSensorInfor()
 {
     DrawString(temp_x, temp_y, tempStr, WHITE);
     DrawString(hum_x, hum_y, humStr, WHITE);
+}
+
+int GetTempSensor()
+{
+    return (int)t;
+}
+
+int GetHumSensor()
+{
+    return (int)h;
 }

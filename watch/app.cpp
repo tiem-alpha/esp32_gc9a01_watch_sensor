@@ -15,8 +15,9 @@
 #include "wifi_config.h"
 #include "temp_sensor.h"
 #include "output.h"
+#include"filesystem.h"
 
-uint8_t state_led = 0;
+// uint8_t state_led = 0;
 static uint8_t stateMachine = 0;
 MYLED led = {
     .PIN = LED};
@@ -25,7 +26,7 @@ MyButton btn = {
     .pin = BUTTON,
     .onClick = []()
     { 
-      state_led = state_led ==0 ?100:0;
+    uint8_t  state_led = led.target >0 ?100:0;
       MYLEDSet(&led,state_led);
       Serial.println("Single Click"); },
     .onDoubleClick = []()
@@ -65,6 +66,7 @@ void changeToWaitWifi()
 void appInit()
 {
     Serial.begin(115200);
+    initFileSystem();
     MYLEDInit(&led);
     MyButtonInit(btn);
     TempHumSensorInit();
@@ -72,6 +74,8 @@ void appInit()
     if (WifiConfigInit(changeToWaitWifi))
     {
         stateMachine = WATCH;
+        getCloudTime();
+        initServer();
     }
     else
     {
@@ -83,7 +87,7 @@ void appRun()
 {
     // switch()
     Concurrent();
-    // static uint8_t count =0;
+    static uint8_t count =0;
     static unsigned long timeStamp = millis();
     switch (stateMachine)
     {
@@ -97,6 +101,7 @@ void appRun()
         {
         case 1:
             stateMachine = WATCH;
+            initServer();
             //            Serial.println(
             break;
 
@@ -113,12 +118,18 @@ void appRun()
         if (millis() - timeStamp >= 1000)
         {
             //   Serial.println("watch state");
-            drawBackGround(FACE1);
+            if(getBackgroundFile()){
+                drawBackGround(BACK_GROUND_FILE);
+            }else{
+                drawBackGround(FACE1);
+            }
+            
             updateTime();
-            drawSensorInfor();
-            // drawTimeAnalog();
-            drawDigital();
-
+           
+           drawWatchFace();
+            notifyClients();
+            ping();
+ 
             timeStamp = millis();
         }
 
@@ -131,4 +142,5 @@ void appRun()
         break;
     }
     DisplayBuffers();
+               keepConnect(); 
 }

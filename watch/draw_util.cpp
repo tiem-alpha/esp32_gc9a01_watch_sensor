@@ -3,6 +3,7 @@
 #include <TFT_eSPI.h>
 #include "FontMaker.h"
 #include "data_type.h"
+#include"filesystem.h"
 
 // Khởi tạo đối tượng TFT
 TFT_eSPI tft = TFT_eSPI();
@@ -578,23 +579,23 @@ inline uint16_t Color8To16bit(uint8_t color)
 
 inline uint16_t ColorGrayTo16bit(uint8_t data, uint16_t color)
 {
-    uint16_t color16bit = 0;
-    // R = R0 * g / 255
-// G = G0 * g / 255
-// B = B0 * g / 255
-   uint16_t red = (color)>>11;// 5bit
-   uint16_t green = (color >> 5)&0x3F; // 6bit
-   uint16_t blue = color &0x1F;//5 bit 
-   red = (red * data)/255; 
-   green = (green*data)/255; 
-   blue = (blue*data/255); 
+  uint16_t color16bit = 0;
+  // R = R0 * g / 255
+  // G = G0 * g / 255
+  // B = B0 * g / 255
+  uint16_t red = (color) >> 11;         // 5bit
+  uint16_t green = (color >> 5) & 0x3F; // 6bit
+  uint16_t blue = color & 0x1F;         // 5 bit
+  red = (red * data) / 255;
+  green = (green * data) / 255;
+  blue = (blue * data / 255);
   // red = (uint16_t) tem
   // color 16 bit: rrrrrggg gggbbbbb
   color16bit |= red << 11;
   color16bit |= green << 5;
   color16bit |= blue;
   return color16bit;
-  }
+}
 // Hàm vẽ ảnh 4-bit từ PROGMEM vào các buffer
 void Draw4bitImageProgmem(int x, int y, Image4Bit image)
 {
@@ -656,8 +657,8 @@ void Draw4bitImageProgmemNoBGUpgrade(int x, int y, Image4Bit image)
 {
   // Kiểm tra xem các buffer đã được cấp phát chưa
   const uint8_t *pBmp = image.data;
-  uint16_t width = image.width/2 ;
-  uint16_t height = image.height/2 ;
+  uint16_t width = image.width / 2;
+  uint16_t height = image.height / 2;
   // Serial.println((width*height));
   // const int sizePixels = width * height;
   uint16_t w = 0;
@@ -670,7 +671,7 @@ void Draw4bitImageProgmemNoBGUpgrade(int x, int y, Image4Bit image)
       uint16_t color = Color8To16bit(data);
       if (color > 0)
       {
-        drawPixel(x+w, y+h, color);
+        drawPixel(x + w, y + h, color);
       }
     }
   }
@@ -679,7 +680,7 @@ void Draw4bitImageProgmemNoBGUpgrade(int x, int y, Image4Bit image)
 void DrawbitImageProgmem(int x, int y, int width, int height, const uint8_t *pBmp)
 {
   const int sizePixels = width * height;
-  for (int i = 0; i < sizePixels; i += 8)
+  for (int i = 0; i < sizePixels; i += 😎
   {
     uint8_t data = pgm_read_byte(pBmp++);
     for (int j = 0; i < 8; j++)
@@ -700,8 +701,8 @@ void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image)
 {
   // Kiểm tra xem các buffer đã được cấp phát chưa
   const uint8_t *pBmp = image.data;
-  uint16_t width = image.width ;
-  uint16_t height = image.height ;
+  uint16_t width = image.width;
+  uint16_t height = image.height;
   // Serial.println((width*height));
   // const int sizePixels = width * height;
   uint16_t w = 0;
@@ -714,7 +715,7 @@ void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image)
       uint16_t color = Color8To16bit(data);
       if (color > 0)
       {
-        drawPixel(x+w, y+h, color);
+        drawPixel(x + w, y + h, color);
       }
     }
   }
@@ -724,8 +725,8 @@ void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image, uint16_t color)
 {
   // Kiểm tra xem các buffer đã được cấp phát chưa
   const uint8_t *pBmp = image.data;
-  uint16_t width = image.width ;
-  uint16_t height = image.height ;
+  uint16_t width = image.width;
+  uint16_t height = image.height;
   // const int sizePixels = width * height;
   // Serial.println((width*height));
   uint16_t w = 0;
@@ -738,16 +739,39 @@ void Draw8bitImageProgmemNoBG(int x, int y, Image8Bit image, uint16_t color)
       uint16_t colorn = ColorGrayTo16bit(data, color);
       if (colorn > 0)
       {
-        drawPixel(x+w, y+h, colorn);
+        drawPixel(x + w, y + h, colorn);
       }
     }
   }
 }
-
 
 void DrawSmallString(int x, int y, const char *str, uint16_t color)
 {
   myfont.set_font(ari);
   myfont.setSize(1);
   myfont.print(x, y, str, color);
+}
+
+void drawBackGround(const char *path)
+{
+  File f = SPIFFS.open(path, "r");
+  if (!f)
+  {
+    Serial.println("Không mở được file ảnh!");
+    return;
+  }
+
+  size_t bytesRead = f.read((uint8_t*)buffer1, SCREEN_WIDTH * SCREEN_HEIGHT);
+  if (bytesRead != SCREEN_WIDTH * SCREEN_HEIGHT)
+  {
+    Serial.println("error read first block");
+  }
+  bytesRead = f.read((uint8_t*)buffer2, SCREEN_WIDTH * SCREEN_HEIGHT);
+  if (bytesRead != SCREEN_WIDTH * SCREEN_HEIGHT)
+  {
+    Serial.println("error read secound block");
+  }
+  isChange = 1;
+  f.close();
+
 }

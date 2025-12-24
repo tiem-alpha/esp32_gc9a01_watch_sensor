@@ -9,14 +9,14 @@ bool readImageFile(const char *path, uint8_t *buffer, size_t bufferSize)
     File file = SPIFFS.open(path, "r");
     if (!file)
     {
-        Serial.println("Không th�? m�? file ảnh!");
+        Serial.println("Không tìm thấy file ảnh!");
         return false;
     }
 
     size_t bytesRead = file.read(buffer, bufferSize);
     file.close();
 
-    Serial.printf("Đã đọc %d byte t�? %s\n", bytesRead, path);
+    Serial.printf("Đã đọc %d byte từ %s\n", bytesRead, path);
     return bytesRead > 0;
 }
 
@@ -32,7 +32,7 @@ void listFiles() {
 
     if (name == BACK_GROUND_FILE && size>= BACK_GROUND_SIZE ) {
       foundFace = true;
-      Serial.printf("✅ Found /face.bin, size = %u bytes\n", (unsigned int)size);
+      Serial.printf(" Found /face.bin, size = %u bytes\n", (unsigned int)size);
     }
     file = root.openNextFile();
   }

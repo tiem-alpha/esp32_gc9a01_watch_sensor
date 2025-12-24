@@ -680,7 +680,7 @@ void Draw4bitImageProgmemNoBGUpgrade(int x, int y, Image4Bit image)
 void DrawbitImageProgmem(int x, int y, int width, int height, const uint8_t *pBmp)
 {
   const int sizePixels = width * height;
-  for (int i = 0; i < sizePixels; i += 😎
+  for (int i = 0; i < sizePixels; i +=1)
   {
     uint8_t data = pgm_read_byte(pBmp++);
     for (int j = 0; i < 8; j++)

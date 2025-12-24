@@ -6,7 +6,7 @@
 #include "log.h"
 #include "filesystem.h"
 
-#define FIXED_WIFI 1
+#define FIXED_WIFI 0
 
 #if (FIXED_WIFI)
 const char *SSID = "Router2_VHA";
@@ -25,11 +25,11 @@ const char *KEY_PASS = "pass";
 
 // AP info
 const char *AP_SSID = "ESP32_Watch";
-const char *AP_PASS = ""; // >= 8 ký t�?
+const char *AP_PASS = ""; 
 
 static String ssid;
 static String pass;
-// Thời gian timeout khi th�? connect WiFi
+
 const unsigned long WIFI_CONNECT_TIMEOUT = 15000;
 uint8_t connectWifi = 0;
 static unsigned long startStamp;
@@ -48,7 +48,7 @@ void clearWifiConfig()
   preferences.end();
   connectWifi = 0;
   setConnected(0);
-  Serial.println("Đã xóa thông tin WiFi khỏi b�? nh�?!");
+  Serial.println("Đã xóa thông tin WiFi!");
 }
 
 
@@ -99,7 +99,7 @@ uint8_t waitWifiDone()
 void saveWifiConfig()
 {
   Serial.println("Kết nối WiFi thành công!");
-  // Lưu vào b�? nh�?
+ 
   preferences.begin(PREF_NAMESPACE, false);
   preferences.putString(KEY_SSID, ssid);
   preferences.putString(KEY_PASS, pass);
@@ -128,7 +128,7 @@ void startConfigPortal()
     server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request)
               {
                 handleSave(request);
-                // Bạn có th�? kiểm tra kết nối trong loop hoặc task riêng
+               
               });
 
     server.begin();
@@ -137,7 +137,6 @@ void startConfigPortal()
 }
 
 // -------------------------------
-// Th�? connect WiFi dùng thông tin lưu trước đó
 // -------------------------------
 bool tryConnectSavedWiFi()
 {
@@ -153,11 +152,11 @@ bool tryConnectSavedWiFi()
 
   if (ssid == "")
   {
-    Serial.println("Không có thông tin WiFi trong b�? nh�?.");
+    // Serial.println("Không có thông tin WiFi trong ");
     return false;
   }
 
-  Serial.printf("Th�? kết nối WiFi: %s\n", ssid.c_str());
+  Serial.printf("kết nối WiFi: %s\n", ssid.c_str());
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), pass.c_str());

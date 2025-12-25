@@ -16,4 +16,6 @@ void setSecColor(uint16_t color);
 void setSpaceColor(uint16_t color);
 void setShowWatch(uint8_t set); 
 uint8_t getShowWatch();
+uint8_t getDefaultBackGround();
+void setDefaultBackGround(uint8_t set);
 #endif

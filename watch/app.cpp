@@ -116,7 +116,7 @@ void appRun()
         if (millis() - timeStamp >= 1000)
         {
             //   Serial.println("watch state");
-            if (getBackgroundFile())
+            if (getBackgroundFile() && getDefaultBackGround() == 0)
             {
                 drawBackGround(BACK_GROUND_FILE);
             }

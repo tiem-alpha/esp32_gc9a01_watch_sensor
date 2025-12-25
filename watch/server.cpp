@@ -7,7 +7,7 @@
 #include "temp_sensor.h"
 #include "watch.h"
 #include "custom_led.h"
-#include"draw_util.h"
+#include "draw_util.h"
 
 #define SERVER_DNS "watch"
 
@@ -99,15 +99,27 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             {
                 handleColor(doc["color"]);
             }
-            //showwatch
-              if (doc.containsKey("showwatch"))
+            // showwatch
+            if (doc.containsKey("showwatch"))
             {
                 setShowWatch(doc["showwatch"]);
+            }
+            // defaul backgrounf  default
+            if (doc.containsKey("default"))
+            {
+                setDefaultBackGround(doc["default"]);
             }
         }
     }
 }
 
+void ConnectedUploadEvent()
+{
+    notifyClients();
+    ws.textAll("{\"analog\": " + String(getAnalog()) + "}");
+    ws.textAll("{\"showwatch\": " + String(getShowWatch()) + "}");
+    ws.textAll("{\"default\": " + String(getDefaultBackGround()) + "}");
+}
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
              void *arg, uint8_t *data, size_t len)
 {
@@ -115,8 +127,6 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     {
         Serial.println("Client connected");
         clientConnect = 1;
-        notifyClients();
-        ws.textAll("{\"analog\": " + String(getAnalog()) + "}");
     }
     else if (type == WS_EVT_DATA)
     {

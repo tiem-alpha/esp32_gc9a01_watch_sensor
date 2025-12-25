@@ -22,6 +22,7 @@ static uint8_t isHaveTime = 0;
 static uint8_t getDate = 0;
 time_t now;
 static uint8_t showWatch = 1;
+static uint8_t defaultBackGround =1;
 
 static uint16_t hourColor = HOUR_COLOR;
 static uint16_t secColor = SEC_COLOR;
@@ -211,4 +212,18 @@ void setShowWatch(uint8_t set)
 uint8_t getShowWatch()
 {
     return showWatch;
+}
+
+// /defaultBackGround
+
+
+void setDefaultBackGround(uint8_t set)
+
+{
+    defaultBackGround = set;
+}
+
+uint8_t getDefaultBackGround()
+{
+    return defaultBackGround;
 }

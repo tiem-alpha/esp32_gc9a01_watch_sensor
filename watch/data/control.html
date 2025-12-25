@@ -10,11 +10,6 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.css">
-  <!-- jQuery (bắt buộc cho roundSlider) -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <!-- roundSlider -->
-  <script src="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.css">
   <style>
     /* giữ nguyên CSS của bạn */
     body {
@@ -176,10 +171,8 @@
 
     .watch-config {
       margin-top: 25px;
-      /* giãn với phần trên */
       padding-top: 10px;
       border-top: 1px dashed #ddd;
-      /* nhìn rõ khu vực */
     }
 
     .hidden {
@@ -194,7 +187,6 @@
 
     input:checked+.slider {
       background-color: #4cd964;
-      /* màu xanh kiểu iPhone */
     }
 
     input:checked+.slider:before {
@@ -267,6 +259,13 @@
         <button id="sendColorBtn" class="btn">Gửi màu</button>
       </div>
 
+      <div>
+        <label class="switch">
+          <input type="checkbox" id="defaultSwitch" checked>
+          <span class="slider"></span>
+        </label>
+        <span id="switchText">Default background</span>
+      </div>
 
       <h3>Upload ảnh</h3>
       <input type="file" id="fileInput" accept="image/*">
@@ -315,7 +314,6 @@
         })
       });
 
-      // gửi từng chunk
       let offset = 0;
       while (offset < totalBytes) {
         const chunk = buffer.slice(offset, offset + CHUNK_SIZE);
@@ -341,7 +339,6 @@
       if (!decode) return;
       const imageData = ctxWatch.getImageData(0, 0, 240, 240);
       const rgb565 = rgbaToRgb565(imageData.data);
-      // Upload (ví dụ dùng fetch)
       await uploadRgb565Chunked(rgb565.buffer);
       alert("Upload thành công!");
 
@@ -362,7 +359,7 @@
       ctxWatch.clearRect(0, 0, 240, 240);
       ctxWatch.drawImage(img, sx, sy, size, size, 0, 0, 240, 240);
       decode = true;
-      preview.src = canvas.toDataURL("image/png"); // ✅ hiện ngay
+      preview.src = canvas.toDataURL("image/png");
     });
 
     // Hàm chuyển RGBA → RGB565
@@ -427,9 +424,16 @@
 
       if (data.analog !== undefined) {
         $("#analogSwitch").prop("checked", data.analog > 0);
-        // isAnalog = data.analog > 0;
-        // $("#analogSwitch").prop("checked", v > 0);
-        // isAnalog =v > 0; 
+      }
+      // default background
+      if (data.default !== undefined) {
+        $("#defaultSwitch").prop("checked", data.default > 0);
+      }
+
+      // show watch
+      if (data.showwatch !== undefined) {
+        $("#watchSwitch").prop("checked", data.showwatch > 0);
+        watchDetail.style.display = data.showwatch > 0 ? "block" : "none";
       }
     };
 
@@ -448,7 +452,6 @@
       change: e => {
 
         const v = e.value;
-        // $("#lightSwitch").prop("checked", v > 0);
         updateColor(v);
         if (isUpdatingFromESP == false) {
           ws.send(JSON.stringify({ brightness: v }));
@@ -458,8 +461,7 @@
         }
       },
       drag: e => {
-        updateColor(v);
-        // $("#lightSwitch").prop("checked", v > 0);
+        updateColor(e);
       }
     });
 
@@ -468,21 +470,12 @@
       $(".rs-range-color").css("background", `rgb(50, ${g}, 255)`);
     }
 
-    /* ========== SWITCH ========== */
-    // $("#lightSwitch").on("click", function () {
-    //   $("#brightnessKnob").roundSlider("setValue", this.checked ? 100 : 0);
-    //   // const v =  this.checked ? 100 : 0;
-    //   // ws.send(JSON.stringify({ brightness: v }));
-    // });
+    $("#analogSwitch").on("click", function () {
 
-    $("#analogSwitch").on("change", function () {
-
-      // ws.send(JSON.stringify({ analog: v }));
       const v = this.checked ? 1 : 0;
       ws.send(JSON.stringify({ analog: v }));
     });
 
-    // Copy màu giờ sang phút
     document.getElementById("copyHourToMinute").addEventListener("click", () => {
       const hourColor = document.getElementById("hourColor").value;
       document.getElementById("minuteColor").value = hourColor;
@@ -507,7 +500,6 @@
       return (r5 << 11) | (g6 << 5) | b5;
     }
 
-    // Gửi màu sang ESP32
     document.getElementById("sendColorBtn").addEventListener("click", () => {
       const hour = hexToRGB565(document.getElementById("hourColor").value);
       const minute = hexToRGB565(document.getElementById("minuteColor").value);
@@ -520,18 +512,21 @@
 
     const watchSwitch = document.getElementById("watchSwitch");
     const watchDetail = document.getElementById("watchDetail");
-
+    const defaultSwitch = document.getElementById("defaultSwitch");
     // init lần đầu
     watchDetail.style.display = watchSwitch.checked ? "block" : "none";
 
-    watchSwitch.addEventListener("change", () => {
+    watchSwitch.addEventListener("click", () => {
       const show = watchSwitch.checked;
       watchDetail.style.display = show ? "block" : "none";
-
-      // gửi trạng thái sang ESP32 nếu cần
       ws.send(JSON.stringify({ showwatch: show ? 1 : 0 }));
     });
+    // defaultBtn
+    defaultSwitch.addEventListener("click", () => {
+      const v = defaultSwitch.checked ? 1 : 0;
+      ws.send(JSON.stringify({ default: v }));
 
+    });
   </script>
 </body>
 

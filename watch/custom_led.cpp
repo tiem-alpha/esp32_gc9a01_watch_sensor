@@ -14,6 +14,7 @@ void MYLEDSet(MYLED *led, uint8_t percent)
     {
       percent =0;
     }
+    Serial.printf("Set Led %d\n",percent);
     led->target = percent;
     ResetTime(&led->timer);
 }

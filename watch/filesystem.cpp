@@ -61,7 +61,7 @@ void listFiles()
         size_t size = file.size();
         Serial.printf("File: %s, Size: %u bytes\n", name.c_str(), (unsigned int)size);
 
-        if (memcmp(name.c_str(),BACK_GROUND_FILE, strlen(BACK_GROUND_FILE)) ==0  && size >= BACK_GROUND_SIZE)
+        if (memcmp(name.c_str(),FILE_BACK_GROUND, strlen(FILE_BACK_GROUND)) == 0  && size >= BACK_GROUND_SIZE)
         {
             foundFace = true;
             Serial.printf(" Found /face.bin, size = %u bytes\n", (unsigned int)size);

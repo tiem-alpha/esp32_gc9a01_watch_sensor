@@ -56,12 +56,12 @@ void notifyClients()
     StaticJsonDocument<128> doc;
     doc["temp"] = GetTempSensor();
     doc["humi"] = GetHumSensor();
-    //   doc["brightness"] = led.current;
+    doc["brightness"] = led.target;
     //   Serial.printf("update temp %d, hum %d, brign %d\n",GetTempSensor(),  GetHumSensor(),  led.current);
     String json;
     serializeJson(doc, json);
     ws.textAll(json);
-    ws.textAll("{\"brightness\": " + String(led.target) + "}");
+    // ws.textAll("{\"brightness\": " + String(led.target) + "}");
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
@@ -115,10 +115,17 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
 void ConnectedUploadEvent()
 {
-    notifyClients();
-    ws.textAll("{\"analog\": " + String(getAnalog()) + "}");
-    ws.textAll("{\"showwatch\": " + String(getShowWatch()) + "}");
-    ws.textAll("{\"default\": " + String(getDefaultBackGround()) + "}");
+     StaticJsonDocument<128> doc;
+    doc["temp"] = GetTempSensor();
+    doc["humi"] = GetHumSensor();
+    doc["brightness"] = led.target;
+    doc["analog"] = getAnalog();
+    doc["showwatch"] = getShowWatch();
+    doc["default"] = getDefaultBackGround();
+    String json;
+    serializeJson(doc, json);
+    ws.textAll(json);
+
 }
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
              void *arg, uint8_t *data, size_t len)

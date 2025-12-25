@@ -4,6 +4,7 @@
 #include"data_type.h"
 #include <SPIFFS.h>
 
+#define FILE_BACK_GROUND "face.bin"
 #define BACK_GROUND_FILE "/face.bin"
 void initFileSystem();
 bool readImageFile(const char *path, uint8_t *buffer, size_t bufferSize);

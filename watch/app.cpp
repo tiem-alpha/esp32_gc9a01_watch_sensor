@@ -26,7 +26,7 @@ MyButton btn = {
     .pin = BUTTON,
     .onClick = []()
     { 
-    uint8_t  state_led = led.target >0 ?100:0;
+    uint8_t  state_led = led.target >0 ?0:100;
       MYLEDSet(&led,state_led);
       Serial.println("Single Click"); },
     .onDoubleClick = []()
@@ -129,7 +129,8 @@ void appRun()
                 updateTime();
                 drawWatchFace();
             }
-            notifyClients();
+            // notifyClients();
+            ConnectedUploadEvent();
             ping();
 
             timeStamp = millis();

@@ -754,46 +754,8 @@ void DrawSmallString(int x, int y, const char *str, uint16_t color)
 
 void drawBackGround(const char *path)
 {
-  File f = SPIFFS.open(path, "r");
-  if (!f)
-  {
-    Serial.println("Không mở được file ảnh!");
-    return;
-  }
-
-  size_t bytesRead = f.read((uint8_t *)buffer1, SCREEN_WIDTH * SCREEN_HEIGHT);
-  if (bytesRead != SCREEN_WIDTH * SCREEN_HEIGHT)
-  {
-    Serial.println("error read first block");
-  }
-  bytesRead = f.read((uint8_t *)buffer2, SCREEN_WIDTH * SCREEN_HEIGHT);
-  if (bytesRead != SCREEN_WIDTH * SCREEN_HEIGHT)
-  {
-    Serial.println("error read secound block");
-  }
+  readImageFile(BACK_GROUND_FILE, (uint8_t*)buffer1, (SCREEN_WIDTH*SCREEN_HEIGHT), (uint8_t*)buffer2, (SCREEN_WIDTH*SCREEN_HEIGHT));
   isChange = 1;
-  f.close();
+ 
 }
 
-void writeByteScreen(uint8_t *data, size_t len, size_t index)
-{
-
-  uint8_t *buffer;
-  size_t halt = (SCREEN_WIDTH * SCREEN_HEIGHT);
-  if (index + len <= halt)
-  {
-    buffer =(uint8_t*) buffer1;
-    memcpy(buffer + index, data, len);
-  }
-  else if (index >= halt)
-  {
-    buffer = (uint8_t*) buffer2;
-    memcpy(buffer + (index - halt), data, len);
-  }
-  else
-  {
-    size_t len1 = halt - index;
-    memcpy((uint8_t*) buffer1 + index, data, len1);
-    memcpy((uint8_t*) buffer2, data, len - len1);
-  }
-}

@@ -37,9 +37,7 @@ MyButton btn = {
     {
         Serial.println("Factory Reset"); 
         clearWifiConfig();
-        ESP.restart(); 
-    }
-};
+        ESP.restart(); }};
 
 enum
 {
@@ -87,7 +85,7 @@ void appRun()
 {
     // switch()
     Concurrent();
-    static uint8_t count =0;
+    static uint8_t count = 0;
     static unsigned long timeStamp = millis();
     switch (stateMachine)
     {
@@ -118,18 +116,22 @@ void appRun()
         if (millis() - timeStamp >= 1000)
         {
             //   Serial.println("watch state");
-            if(getBackgroundFile()){
+            if (getBackgroundFile())
+            {
                 drawBackGround(BACK_GROUND_FILE);
-            }else{
+            }
+            else
+            {
                 drawBackGround(FACE1);
             }
-            
-            updateTime();
-           
-           drawWatchFace();
+            if (getShowWatch() == 1)
+            {
+                updateTime();
+                drawWatchFace();
+            }
             notifyClients();
             ping();
- 
+
             timeStamp = millis();
         }
 
@@ -142,5 +144,5 @@ void appRun()
         break;
     }
     DisplayBuffers();
-               keepConnect(); 
+    keepConnect();
 }

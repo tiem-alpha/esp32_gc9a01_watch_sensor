@@ -5,7 +5,7 @@
 #include "temp_sensor.h"
 #include "image_data.h"
 #include "image_eight_data.h"
-#include"temp_sensor.h"
+#include "temp_sensor.h"
 
 // Thông tin NTP Server
 const char *ntpServer = "pool.ntp.org";
@@ -21,10 +21,11 @@ static uint8_t isConnected, analog = 0;
 static uint8_t isHaveTime = 0;
 static uint8_t getDate = 0;
 time_t now;
+static uint8_t showWatch = 1;
 
 static uint16_t hourColor = HOUR_COLOR;
 static uint16_t secColor = SEC_COLOR;
-static uint16_t minColor = MIN_COLOR; 
+static uint16_t minColor = MIN_COLOR;
 static uint16_t spaceColor = HOUR_COLOR;
 const char *thu_vn[] = {
     "CN", "T2", "T3",
@@ -66,10 +67,10 @@ void initTime()
     }
 }
 
-
 void getCloudTime()
 {
-    if(  isHaveTime ==1) return; 
+    if (isHaveTime == 1)
+        return;
     if (getConnected() == 1)
     {
         for (int i = 0; i < 4; i++)
@@ -147,13 +148,13 @@ void drawDigital()
     x += images8[10].width + padding;
     Draw8bitImageProgmemNoBG(x, y, images8[sech], secColor);
     x += images8[sech].width + padding;
-    Draw8bitImageProgmemNoBG(x, y, images8[secl],secColor);
+    Draw8bitImageProgmemNoBG(x, y, images8[secl], secColor);
     DrawSmallString(60, 20, date, WHITE);
 }
 
 void setTime(time_t epoch)
 {
-    // if(  isHaveTime ==1) return; 
+    // if(  isHaveTime ==1) return;
     now = (time_t)epoch;
 }
 
@@ -164,7 +165,7 @@ uint8_t getAnalog()
 
 void setAnalog(uint8_t ana)
 {
-    Serial.printf("set analog %d\n",ana);
+    Serial.printf("set analog %d\n", ana);
     analog = ana;
 }
 void drawWatchFace()
@@ -180,19 +181,34 @@ void drawWatchFace()
     }
 }
 
-void setHourColor(uint16_t color){
-    hourColor =color;
+void setHourColor(uint16_t color)
+{
+    hourColor = color;
     spaceColor = color;
 }
 
-void setMinColor(uint16_t color){
-    minColor =color;
+void setMinColor(uint16_t color)
+{
+    minColor = color;
 }
 
-void setSecColor(uint16_t color){
-    secColor =color;
+void setSecColor(uint16_t color)
+{
+    secColor = color;
 }
 
-void setSpaceColor(uint16_t color){
-    spaceColor =color;
+void setSpaceColor(uint16_t color)
+{
+    spaceColor = color;
+}
+
+void setShowWatch(uint8_t set)
+
+{
+    showWatch = set;
+}
+
+uint8_t getShowWatch()
+{
+    return showWatch;
 }

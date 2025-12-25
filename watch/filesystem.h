@@ -7,6 +7,7 @@
 #define BACK_GROUND_FILE "/face.bin"
 void initFileSystem();
 bool readImageFile(const char *path, uint8_t *buffer, size_t bufferSize);
+bool readImageFile(const char *path, uint8_t *buffer, size_t bufferSize, uint8_t *buffer2, size_t bufferSize2);
 bool getBackgroundFile();
 void closeFile();
 size_t writeFile(uint8_t *data, size_t len, size_t index, size_t total);

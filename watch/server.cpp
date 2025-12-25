@@ -99,6 +99,11 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             {
                 handleColor(doc["color"]);
             }
+            //showwatch
+              if (doc.containsKey("showwatch"))
+            {
+                setShowWatch(doc["showwatch"]);
+            }
         }
     }
 }

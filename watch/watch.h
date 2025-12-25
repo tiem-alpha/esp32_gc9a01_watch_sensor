@@ -14,4 +14,6 @@ void setHourColor(uint16_t color);
 void setMinColor(uint16_t color);
 void setSecColor(uint16_t color);
 void setSpaceColor(uint16_t color);
+void setShowWatch(uint8_t set); 
+uint8_t getShowWatch();
 #endif

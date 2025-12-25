@@ -174,7 +174,23 @@
       background-color: #45a049;
     }
 
+    .watch-config {
+      margin-top: 25px;
+      /* giãn với phần trên */
+      padding-top: 10px;
+      border-top: 1px dashed #ddd;
+      /* nhìn rõ khu vực */
+    }
 
+    .hidden {
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+    }
+
+    #watchDetail {
+      transition: all 0.3s ease;
+    }
 
     input:checked+.slider {
       background-color: #4cd964;
@@ -206,59 +222,61 @@
     </div>
 
     <div class="knob-container">
-      <label>Độ sáng đèn</label>
+      <label><b>Độ sáng đèn</b></label>
       <div id="brightnessKnob" style="position: relative; display:inline-block;"></div>
-      <!-- <label class="switch">
-    <input type="checkbox" id="lightSwitch" checked>
-    <span class="slider"></span>
-  </label> -->
 
     </div>
-
-    <!-- <div>
-    <label class="switch">
-      <input type="checkbox" id="analogSwitch" checked>
-      <span class="slider"></span> -->
-    <!-- <span id="switchText">Analog Mode</span> -->
-    <!-- </div> -->
-    <div>
-      <label class="switch">
-        <input type="checkbox" id="analogSwitch" checked>
-        <span class="slider"></span>
-      </label>
-      <span id="switchText">Analog Mode</span>
-    </div>
-
-    <div class="color-row">
-      <div class="color-item">
-        <label>Giờ</label>
-        <input type="color" id="hourColor" value="#ff0000">
+    <div class="watch-config">
+      <label><b>Cấu hình đồng hồ</b></label>
+      <div>
+        <label class="switch">
+          <input type="checkbox" id="watchSwitch" checked>
+          <span class="slider"></span>
+        </label>
+        <span id="switchText">Show watch</span>
       </div>
-      <div class="color-item">
-        <label>Phút</label>
-        <input type="color" id="minuteColor" value="#ff0000">
-        <button id="copyHourToMinute">Copy</button>
+
+      <div id="watchDetail">
+        <div class="color-row">
+          <div class="color-item">
+            <label class="switch">
+              <input type="checkbox" id="analogSwitch" checked>
+              <span class="slider"></span>
+            </label>
+            <span>Analog Mode</span>
+          </div>
+        </div>
+
+        <div class="color-row">
+          <div class="color-item">
+            <label>Giờ</label>
+            <input type="color" id="hourColor" value="#ff0000">
+          </div>
+          <div class="color-item">
+            <label>Phút</label>
+            <input type="color" id="minuteColor" value="#ff0000">
+            <button id="copyHourToMinute">Copy</button>
+          </div>
+          <div class="color-item">
+            <label>Giây</label>
+            <input type="color" id="secondColor" value="#ff0000">
+            <button id="copyHourToSecond">Copy</button>
+          </div>
+        </div>
+
+        <button id="sendColorBtn" class="btn">Gửi màu</button>
       </div>
-      <div class="color-item">
-        <label>Giây</label>
-        <input type="color" id="secondColor" value="#ff0000">
-        <button id="copyHourToSecond">Copy</button>
+
+
+      <h3>Upload ảnh</h3>
+      <input type="file" id="fileInput" accept="image/*">
+      <canvas id="canvas" width="240" height="240" style="display:none;"></canvas>
+      <img id="preview" width="240" height="240" alt="Preview">
+
+      <div>
+        <button id="sendImage" class="btn">Upload</button>
       </div>
     </div>
-    <div>
-      <button id="sendColorBtn" class="btn">Gửi màu</button>
-    </div>
-
-
-    <h3>Upload ảnh</h3>
-    <input type="file" id="fileInput" accept="image/*">
-    <canvas id="canvas" width="240" height="240" style="display:none;"></canvas>
-    <img id="preview" width="240" height="240" alt="Preview">
-
-    <div>
-      <button id="sendImage" class="btn">Upload</button>
-    </div>
-
     <div class="footer">© 2025 ESP32 Dashboard (WebSocket + Knob + Chart)</div>
   </div>
 
@@ -282,7 +300,7 @@
     const ctxWatch = canvas.getContext("2d");
     const preview = document.getElementById("preview");
     let file;
-    let decode =false;
+    let decode = false;
     async function uploadRgb565Chunked(buffer) {
       const totalBytes = buffer.byteLength;
 
@@ -320,7 +338,7 @@
 
     document.getElementById("sendImage").addEventListener("click", async () => {
       if (!file) return;
-      if(!decode) return;
+      if (!decode) return;
       const imageData = ctxWatch.getImageData(0, 0, 240, 240);
       const rgb565 = rgbaToRgb565(imageData.data);
       // Upload (ví dụ dùng fetch)
@@ -498,6 +516,20 @@
       const data = { hour, minute, second };
       ws.send(JSON.stringify({ color: data }));
       console.log("Sent RGB565:", data);
+    });
+
+    const watchSwitch = document.getElementById("watchSwitch");
+    const watchDetail = document.getElementById("watchDetail");
+
+    // init lần đầu
+    watchDetail.style.display = watchSwitch.checked ? "block" : "none";
+
+    watchSwitch.addEventListener("change", () => {
+      const show = watchSwitch.checked;
+      watchDetail.style.display = show ? "block" : "none";
+
+      // gửi trạng thái sang ESP32 nếu cần
+      ws.send(JSON.stringify({ showwatch: show ? 1 : 0 }));
     });
 
   </script>

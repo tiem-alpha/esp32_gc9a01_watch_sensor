@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ESP32 Dashboard (WebSocket)</title>
+  <title>Watch Dashboard (WebSocket)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -267,6 +267,7 @@
     const ws = new WebSocket(ws://${location.host}/ws);
     let isUpdatingFromESP = false;
     let isAnalog = false;
+    const CHUNK_SIZE = 1024;
     ws.onopen = () => {
       const epoch = Math.floor(Date.now() / 1000);
       ws.send(JSON.stringify({ epoch }));
@@ -281,6 +282,41 @@
     const ctxWatch = canvas.getContext("2d");
     const preview = document.getElementById("preview");
     let file;
+    async function uploadRgb565Chunked(buffer) {
+      const totalBytes = buffer.byteLength;
+
+      // báo bắt đầu
+      await fetch("/img_begin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          width: 240,
+          height: 240,
+          total: totalBytes
+        })
+      });
+
+      // gửi từng chunk
+      let offset = 0;
+      while (offset < totalBytes) {
+        const chunk = buffer.slice(offset, offset + CHUNK_SIZE);
+
+        await fetch("/img_chunk", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "X-Offset": offset
+          },
+          body: chunk
+        });
+
+        offset += CHUNK_SIZE;
+      }
+
+      // báo kết thúc
+      await fetch("/img_end", { method: "POST" });
+    }
+
     document.getElementById("sendImage").addEventListener("click", async () => {
       if (!file) return;
 
@@ -302,12 +338,12 @@
       const imageData = ctxWatch.getImageData(0, 0, 240, 240);
       const rgb565 = rgbaToRgb565(imageData.data);
       // Upload (ví dụ dùng fetch)
-      await uploadRgb565(rgb565);
+      await uploadRgb565Chunked(rgb565.buffer);
       alert("Upload thành công!");
 
     });
 
-    fileInput.addEventListener("change", () => {
+    fileInput.addEventListener("change", (e) => {
       file = e.target.files[0];
     });
 
@@ -323,18 +359,7 @@
       return buffer;
     }
 
-    // Hàm upload dữ liệu
-    async function uploadRgb565(buffer) {
-      // Chuyển sang ArrayBuffer để gửi
-      const blob = new Blob([buffer.buffer], { type: "application/octet-stream" });
-      await fetch("/upload_rgb565", {
-        method: "POST",
-        body: blob
-      });
-      // Hoặc nếu bạn dùng socket.io:
-      // socket.emit("uploadImage", buffer);
-    }
-
+   
 
     // Biểu đồ nhiệt độ & độ ẩm
     const ctx = document.getElementById("sensorChart").getContext("2d");
@@ -422,7 +447,7 @@
 
     function updateColor(v) {
       const g = Math.round(180 - v * 0.9);
-      $(".rs-range-color").css("background", rgb(50,${g},255));
+      $(".rs-range-color").css("background", rgb(50, ${ g }, 255));
     }
 
     /* ========== SWITCH ========== */

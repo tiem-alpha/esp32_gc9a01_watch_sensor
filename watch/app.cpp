@@ -15,7 +15,7 @@
 #include "wifi_config.h"
 #include "temp_sensor.h"
 #include "output.h"
-
+#include "filesystem.h"
 
 // uint8_t state_led = 0;
 static uint8_t stateMachine = 0;

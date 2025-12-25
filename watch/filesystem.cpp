@@ -85,7 +85,7 @@ size_t writeFile(uint8_t *data, size_t len, size_t index, size_t total)
         if (writeBytes != len)
         {
             status = 1;
-            Serial.printf("Write error! written=%u len=%u\n", written, len);
+            Serial.printf("Write error! written=%u len=%u\n", writeBytes, len);
         }
     }else {
          status = 1;

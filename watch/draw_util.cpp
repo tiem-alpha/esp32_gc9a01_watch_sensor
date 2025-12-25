@@ -3,7 +3,7 @@
 #include <TFT_eSPI.h>
 #include "FontMaker.h"
 #include "data_type.h"
-#include"filesystem.h"
+#include "filesystem.h"
 
 // Khởi tạo đối tượng TFT
 TFT_eSPI tft = TFT_eSPI();
@@ -680,7 +680,7 @@ void Draw4bitImageProgmemNoBGUpgrade(int x, int y, Image4Bit image)
 void DrawbitImageProgmem(int x, int y, int width, int height, const uint8_t *pBmp)
 {
   const int sizePixels = width * height;
-  for (int i = 0; i < sizePixels; i +=1)
+  for (int i = 0; i < sizePixels; i += 1)
   {
     uint8_t data = pgm_read_byte(pBmp++);
     for (int j = 0; i < 8; j++)
@@ -761,17 +761,39 @@ void drawBackGround(const char *path)
     return;
   }
 
-  size_t bytesRead = f.read((uint8_t*)buffer1, SCREEN_WIDTH * SCREEN_HEIGHT);
+  size_t bytesRead = f.read((uint8_t *)buffer1, SCREEN_WIDTH * SCREEN_HEIGHT);
   if (bytesRead != SCREEN_WIDTH * SCREEN_HEIGHT)
   {
     Serial.println("error read first block");
   }
-  bytesRead = f.read((uint8_t*)buffer2, SCREEN_WIDTH * SCREEN_HEIGHT);
+  bytesRead = f.read((uint8_t *)buffer2, SCREEN_WIDTH * SCREEN_HEIGHT);
   if (bytesRead != SCREEN_WIDTH * SCREEN_HEIGHT)
   {
     Serial.println("error read secound block");
   }
   isChange = 1;
   f.close();
+}
 
+void writeByteScreen(uint8_t *data, size_t len, size_t index)
+{
+
+  uint8_t *buffer;
+  size_t halt = (SCREEN_WIDTH * SCREEN_HEIGHT);
+  if (index + len <= halt)
+  {
+    buffer =(uint8_t*) buffer1;
+    memcpy(buffer + index, data, len);
+  }
+  else if (index >= halt)
+  {
+    buffer = (uint8_t*) buffer2;
+    memcpy(buffer + (index - halt), data, len);
+  }
+  else
+  {
+    size_t len1 = halt - index;
+    memcpy((uint8_t*) buffer1 + index, data, len1);
+    memcpy((uint8_t*) buffer2, data, len - len1);
+  }
 }

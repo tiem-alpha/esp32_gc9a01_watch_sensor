@@ -7,6 +7,7 @@
 #include "temp_sensor.h"
 #include "watch.h"
 #include "custom_led.h"
+#include"draw_util.h"
 
 #define SERVER_DNS "watch"
 
@@ -156,6 +157,7 @@ void initServer()
         [](AsyncWebServerRequest *req, uint8_t *data, size_t len, size_t index, size_t total)
         {
             writeFile(data, len, index, total);
+            // writeByteScreen(data,  len,  index);
         });
 
     server.on("/img_end", HTTP_POST, [](AsyncWebServerRequest *req)

@@ -66,26 +66,33 @@ bool openFile(const char *filePath)
 {
     img_offset = 0;
     status = 0;
-    imgFile = SPIFFS.open("/image.raw", "w");
+    imgFile = SPIFFS.open(filePath, "w");
     if (imgFile){
         //  status = 1;
+         Serial.println("mở file thành công");
          return true;
     }
-     status = 1;  
+    Serial.println("không thể mở file");
+     status = 1; 
+     foundFace = false; 
     return false;
 }
 
 size_t writeFile(uint8_t *data, size_t len, size_t index, size_t total)
 {
     size_t writeBytes = 0;
+   
     if (imgFile)
     {
         writeBytes = imgFile.write(data, len);
         img_offset += len;
         if (writeBytes != len)
         {
+            foundFace = false;
             status = 1;
             Serial.printf("Write error! written=%u len=%u\n", writeBytes, len);
+        }else{
+            Serial.printf("write thành công %d bytes\n",writeBytes);
         }
     }else {
          status = 1;
@@ -99,11 +106,13 @@ void closeFile()
     {
         if (status == 0)
         {
-            foundFace = 1;
+            foundFace = true;
         }
+        img_offset =0; 
         status =0; 
         imgFile.flush();
         imgFile.close();
+        Serial.println("Image upload done");
     }
-    Serial.println("Image upload done");
+    
 }

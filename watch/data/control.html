@@ -264,7 +264,7 @@
 
   <script>
     /* ========== WEBSOCKET ========== */
-    const ws = new WebSocket(ws://${location.host}/ws);
+    const ws = new WebSocket(`ws://${location.host}/ws`);
     let isUpdatingFromESP = false;
     let isAnalog = false;
     const CHUNK_SIZE = 1024;
@@ -282,6 +282,7 @@
     const ctxWatch = canvas.getContext("2d");
     const preview = document.getElementById("preview");
     let file;
+    let decode =false;
     async function uploadRgb565Chunked(buffer) {
       const totalBytes = buffer.byteLength;
 
@@ -319,22 +320,7 @@
 
     document.getElementById("sendImage").addEventListener("click", async () => {
       if (!file) return;
-
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      await img.decode();
-
-      // Cắt hình vuông theo cạnh nhỏ nhất
-      const size = Math.min(img.width, img.height);
-      const sx = (img.width - size) / 2;
-      const sy = (img.height - size) / 2;
-
-      // Vẽ và resize về 240x240
-      ctxWatch.clearRect(0, 0, 240, 240);
-      ctxWatch.drawImage(img, sx, sy, size, size, 0, 0, 240, 240);
-
-      preview.src = canvas.toDataURL("image/png");
-
+      if(!decode) return;
       const imageData = ctxWatch.getImageData(0, 0, 240, 240);
       const rgb565 = rgbaToRgb565(imageData.data);
       // Upload (ví dụ dùng fetch)
@@ -343,8 +329,22 @@
 
     });
 
-    fileInput.addEventListener("change", (e) => {
+    fileInput.addEventListener("change", async (e) => {
       file = e.target.files[0];
+      if (!file) return;
+
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      await img.decode();
+
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+
+      ctxWatch.clearRect(0, 0, 240, 240);
+      ctxWatch.drawImage(img, sx, sy, size, size, 0, 0, 240, 240);
+      decode = true;
+      preview.src = canvas.toDataURL("image/png"); // ✅ hiện ngay
     });
 
     // Hàm chuyển RGBA → RGB565
@@ -359,7 +359,7 @@
       return buffer;
     }
 
-   
+
 
     // Biểu đồ nhiệt độ & độ ẩm
     const ctx = document.getElementById("sensorChart").getContext("2d");
@@ -447,7 +447,7 @@
 
     function updateColor(v) {
       const g = Math.round(180 - v * 0.9);
-      $(".rs-range-color").css("background", rgb(50, ${ g }, 255));
+      $(".rs-range-color").css("background", `rgb(50, ${g}, 255)`);
     }
 
     /* ========== SWITCH ========== */

@@ -156,7 +156,7 @@ void startConfigPortal()
 
 // -------------------------------
 // -------------------------------
-bool tryConnectSavedWiFi()
+bool l ,k  yConnectSavedWiFi()
 {
 #if (FIXED_WIFI)
 

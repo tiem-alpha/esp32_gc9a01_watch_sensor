@@ -1,5 +1,6 @@
 #include "server.h"
 #include <ESPAsyncWebServer.h>
+#include <Update.h>
 #include <AsyncTCP.h>
 #include <ArduinoJson.h>
 #include "filesystem.h"
@@ -14,6 +15,549 @@
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
+const char html[] PROGMEM = R"HTML(
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watch Dashboard (WebSocket)</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.css">
+  <style>
+    /* giữ nguyên CSS của bạn */
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      padding: 25px;
+      text-align: center;
+      width: 95%;
+      max-width: 420px;
+    }
+
+    h2 {
+      margin-bottom: 15px;
+    }
+
+    .sensor {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    .sensor div {
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sensor i {
+      font-size: 22px;
+      margin-top: 25px;
+      padding-top: 10px;
+      color: #0078ff;
+    }
+
+    #chartContainer {
+      width: 100%;
+      height: 180px;
+      margin-bottom: 25px;
+    }
+
+    .knob-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #brightnessKnob {
+      margin-top: 10px;
+    }
+
+    .footer {
+      margin-top: 15px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+      margin-top: 15px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    .color-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .color-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .color-item label {
+      font-weight: 600;
+      min-width: 40px;
+    }
+
+    .color-item input[type="color"] {
+      width: 40px;
+      height: 30px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .color-item button {
+      padding: 4px 8px;
+      border: none;
+      background-color: #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .color-item button:hover {
+      background-color: #ccc;
+    }
+
+    .btn {
+      display: block;
+      margin: 15px auto;
+      padding: 8px 16px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .watch-config {
+      margin-top: 25px;
+      padding-top: 10px;
+      border-top: 1px dashed #ddd;
+    }
+
+    .hidden {
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+    }
+
+    #watchDetail {
+      transition: all 0.3s ease;
+    }
+
+    input:checked+.slider {
+      background-color: #4cd964;
+    }
+
+    input:checked+.slider:before {
+      transform: translateX(26px);
+    }
+
+    #preview {
+      margin-top: 10px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>Bảng điều khiển ESP32</h2>
+<div>
+ <label><b>Upload firmware</b></label>
+<form method='POST' action='/update' enctype='multipart/form-data'>
+<input type='file' name='firmware'>
+<input type='submit' value='Update'>
+</form>
+</div>
+
+    <div class="sensor">
+      <div>🌡️ <span id="temp">--</span>°C</div>
+      <div>💧 <span id="humi">--</span>%</div>
+    </div>
+
+    <div id="chartContainer">
+      <canvas id="sensorChart"></canvas>
+    </div>
+
+    <div class="knob-container">
+      <label><b>Độ sáng đèn</b></label>
+      <div id="brightnessKnob" style="position: relative; display:inline-block;"></div>
+
+    </div>
+    <div class="watch-config">
+      <label><b>Cấu hình đồng hồ</b></label>
+      <div>
+        <label class="switch">
+          <input type="checkbox" id="watchSwitch" checked>
+          <span class="slider"></span>
+        </label>
+        <span id="switchText">Show watch</span>
+      </div>
+
+      <div id="watchDetail">
+        <div class="color-row">
+          <div class="color-item">
+            <label class="switch">
+              <input type="checkbox" id="analogSwitch" checked>
+              <span class="slider"></span>
+            </label>
+            <span>Analog Mode</span>
+          </div>
+        </div>
+
+        <div class="color-row">
+          <div class="color-item">
+            <label>Giờ</label>
+            <input type="color" id="hourColor" value="#ff0000">
+          </div>
+          <div class="color-item">
+            <label>Phút</label>
+            <input type="color" id="minuteColor" value="#ff0000">
+            <button id="copyHourToMinute">Copy</button>
+          </div>
+          <div class="color-item">
+            <label>Giây</label>
+            <input type="color" id="secondColor" value="#ff0000">
+            <button id="copyHourToSecond">Copy</button>
+          </div>
+        </div>
+
+        <button id="sendColorBtn" class="btn">Gửi màu</button>
+      </div>
+
+      <div>
+        <label class="switch">
+          <input type="checkbox" id="defaultSwitch" checked>
+          <span class="slider"></span>
+        </label>
+        <span id="switchText">Default background</span>
+      </div>
+
+      <h3>Upload ảnh</h3>
+      <input type="file" id="fileInput" accept="image/*">
+      <canvas id="canvas" width="240" height="240" style="display:none;"></canvas>
+      <img id="preview" width="240" height="240" alt="Preview">
+
+      <div>
+        <button id="sendImage" class="btn">Upload</button>
+      </div>
+    </div>
+    <div class="footer">© 2025 ESP32 Dashboard (WebSocket + Knob + Chart)</div>
+  </div>
+
+  <script>
+    /* ========== WEBSOCKET ========== */
+    const ws = new WebSocket(`ws://${location.host}/ws`);
+    let isUpdatingFromESP = false;
+    let isAnalog = false;
+    const CHUNK_SIZE = 1024;
+    ws.onopen = () => {
+      const epoch = Math.floor(Date.now() / 1000);
+      ws.send(JSON.stringify({ epoch }));
+    };
+    /* ========== DOM ========== */
+    const tempEl = document.getElementById("temp");
+    const humiEl = document.getElementById("humi");
+
+    /* ========== CHART ========== */
+    const fileInput = document.getElementById("fileInput");
+    const canvas = document.getElementById("canvas");
+    const ctxWatch = canvas.getContext("2d");
+    const preview = document.getElementById("preview");
+    let file;
+    let decode = false;
+    async function uploadRgb565Chunked(buffer) {
+      const totalBytes = buffer.byteLength;
+
+      // báo bắt đầu
+      await fetch("/img_begin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          width: 240,
+          height: 240,
+          total: totalBytes
+        })
+      });
+
+      let offset = 0;
+      while (offset < totalBytes) {
+        const chunk = buffer.slice(offset, offset + CHUNK_SIZE);
+
+        await fetch("/img_chunk", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "X-Offset": offset
+          },
+          body: chunk
+        });
+
+        offset += CHUNK_SIZE;
+      }
+
+      // báo kết thúc
+      await fetch("/img_end", { method: "POST" });
+    }
+
+    document.getElementById("sendImage").addEventListener("click", async () => {
+      if (!file) return;
+      if (!decode) return;
+      const imageData = ctxWatch.getImageData(0, 0, 240, 240);
+      const rgb565 = rgbaToRgb565(imageData.data);
+      await uploadRgb565Chunked(rgb565.buffer);
+      alert("Upload thành công!");
+
+    });
+
+    fileInput.addEventListener("change", async (e) => {
+      file = e.target.files[0];
+      if (!file) return;
+
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      await img.decode();
+
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+
+      ctxWatch.clearRect(0, 0, 240, 240);
+      ctxWatch.drawImage(img, sx, sy, size, size, 0, 0, 240, 240);
+      decode = true;
+      preview.src = canvas.toDataURL("image/png");
+    });
+
+    // Hàm chuyển RGBA → RGB565
+    function rgbaToRgb565(rgba) {
+      const buffer = new Uint16Array(240 * 240);
+      for (let i = 0, j = 0; i < rgba.length; i += 4, j++) {
+        const r = rgba[i] >> 3;
+        const g = rgba[i + 1] >> 2;
+        const b = rgba[i + 2] >> 3;
+        buffer[j] = (r << 11) | (g << 5) | b;
+      }
+      return buffer;
+    }
+
+
+
+    // Biểu đồ nhiệt độ & độ ẩm
+    const ctx = document.getElementById("sensorChart").getContext("2d");
+
+    const chartData = {
+      labels: [],
+      datasets: [
+        { label: "Nhiệt độ (°C)", data: [], borderColor: "#ff6b6b", fill: false },
+        { label: "Độ ẩm (%)", data: [], borderColor: "#4facfe", fill: false }
+      ]
+    };
+
+    const sensorChart = new Chart(ctx, {
+      type: "line",
+      data: chartData,
+      options: {
+        responsive: true,
+        scales: { x: { display: false }, y: { beginAtZero: true } },
+        plugins: { legend: { display: true, position: "bottom" } }
+      }
+    });
+
+    /* ========== WEBSOCKET RECEIVE ========== */
+    ws.onmessage = e => {
+      const data = JSON.parse(e.data);
+      console.log("Received:", e.data);
+      if (data.temp !== undefined) {
+        tempEl.textContent = data.temp.toFixed(1);
+        humiEl.textContent = data.humi.toFixed(1);
+
+        chartData.labels.push(new Date().toLocaleTimeString());
+        chartData.datasets[0].data.push(data.temp);
+        chartData.datasets[1].data.push(data.humi);
+
+        if (chartData.labels.length > 10) {
+          chartData.labels.shift();
+          chartData.datasets.forEach(d => d.data.shift());
+        }
+        sensorChart.update();
+      }
+
+      if (data.brightness !== undefined) {
+        isUpdatingFromESP = true;
+        $("#brightnessKnob").roundSlider("setValue", data.brightness);
+        isUpdatingFromESP = false;
+      }
+
+      if (data.analog !== undefined) {
+        $("#analogSwitch").prop("checked", data.analog > 0);
+      }
+      // default background
+      if (data.default !== undefined) {
+        $("#defaultSwitch").prop("checked", data.default > 0);
+      }
+
+      // show watch
+      if (data.showwatch !== undefined) {
+        $("#watchSwitch").prop("checked", data.showwatch > 0);
+        watchDetail.style.display = data.showwatch > 0 ? "block" : "none";
+      }
+    };
+
+    /* ========== KNOB ========== */
+    $("#brightnessKnob").roundSlider({
+      radius: 80,
+      width: 14,
+      handleSize: "+8",
+      sliderType: "min-range",
+      value: 50,
+      circleShape: "full",
+      startAngle: 315,
+      endAngle: 225,
+      editableTooltip: true,
+      tooltipFormat: e => e.value + "%",
+      change: e => {
+
+        const v = e.value;
+        updateColor(v);
+        if (isUpdatingFromESP == false) {
+          ws.send(JSON.stringify({ brightness: v }));
+        } else {
+          isUpdatingFromESP = false;
+          return;
+        }
+      },
+      drag: e => {
+        updateColor(e);
+      }
+    });
+
+    function updateColor(v) {
+      const g = Math.round(180 - v * 0.9);
+      $(".rs-range-color").css("background", `rgb(50, ${g}, 255)`);
+    }
+
+    $("#analogSwitch").on("click", function () {
+
+      const v = this.checked ? 1 : 0;
+      ws.send(JSON.stringify({ analog: v }));
+    });
+
+    document.getElementById("copyHourToMinute").addEventListener("click", () => {
+      const hourColor = document.getElementById("hourColor").value;
+      document.getElementById("minuteColor").value = hourColor;
+    });
+
+    // Copy màu giờ sang giây
+    document.getElementById("copyHourToSecond").addEventListener("click", () => {
+      const hourColor = document.getElementById("hourColor").value;
+      document.getElementById("secondColor").value = hourColor;
+    });
+
+    function hexToRGB565(hex) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+
+      // Dịch bit đúng theo chuẩn RGB565
+      const r5 = (r >> 3) & 0x1F;  // 5 bit
+      const g6 = (g >> 2) & 0x3F;  // 6 bit
+      const b5 = (b >> 3) & 0x1F;  // 5 bit
+
+      return (r5 << 11) | (g6 << 5) | b5;
+    }
+
+    document.getElementById("sendColorBtn").addEventListener("click", () => {
+      const hour = hexToRGB565(document.getElementById("hourColor").value);
+      const minute = hexToRGB565(document.getElementById("minuteColor").value);
+      const second = hexToRGB565(document.getElementById("secondColor").value);
+
+      const data = { hour, minute, second };
+      ws.send(JSON.stringify({ color: data }));
+      console.log("Sent RGB565:", data);
+    });
+
+    const watchSwitch = document.getElementById("watchSwitch");
+    const watchDetail = document.getElementById("watchDetail");
+    const defaultSwitch = document.getElementById("defaultSwitch");
+    // init lần đầu
+    watchDetail.style.display = watchSwitch.checked ? "block" : "none";
+
+    watchSwitch.addEventListener("click", () => {
+      const show = watchSwitch.checked;
+      watchDetail.style.display = show ? "block" : "none";
+      ws.send(JSON.stringify({ showwatch: show ? 1 : 0 }));
+    });
+    // defaultBtn
+    defaultSwitch.addEventListener("click", () => {
+      const v = defaultSwitch.checked ? 1 : 0;
+      ws.send(JSON.stringify({ default: v }));
+
+    });
+  </script>
+</body>
+</html>
+)HTML";
 extern MYLED led;
 uint8_t isConnected = 0;
 uint8_t clientConnect = 0;
@@ -164,8 +708,36 @@ void initServer()
 
     ws.onEvent(onEvent);
     server.addHandler(&ws);
-    server.serveStatic("/", SPIFFS, "/").setDefaultFile("control.html");
+    // file 
+//    server.serveStatic("/", SPIFFS, "/").setDefaultFile("control.html");
+server.on("/", [](AsyncWebServerRequest *req) {
+  req->send(200, "text/html", html);
+});
 
+ server.on("/update", HTTP_POST,
+    [](AsyncWebServerRequest *request) {
+      bool ok = !Update.hasError();
+      request->send(200, "text/plain", ok ? "Update Success! Rebooting..." : "Update Failed!");
+      delay(500);
+      ESP.restart();
+    },
+    [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+      if(!index){
+        Serial.printf("Update Start: %s\n", filename.c_str());
+        if(!Update.begin())
+          Update.printError(Serial);
+      }
+      if(Update.write(data, len) != len)
+        Update.printError(Serial);
+      if(final){
+        if(Update.end(true))
+          Serial.println("Update Success!");
+        else
+          Update.printError(Serial);
+      }
+    }
+  );
+    
     server.on("/img_begin", HTTP_POST, [](AsyncWebServerRequest *req)
               {
   openFile(BACK_GROUND_FILE);

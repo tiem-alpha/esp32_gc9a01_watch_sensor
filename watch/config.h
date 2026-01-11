@@ -1,7 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define LED 12
+#define LED 13
+#define BUZZER_PIN 12
 #define BUTTON 19
 
 #define SCREEN_MOSI 23 // In some display driver board, it might be written as "SDA" and so on.

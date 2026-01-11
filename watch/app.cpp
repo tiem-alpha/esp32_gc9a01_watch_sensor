@@ -16,6 +16,7 @@
 #include "temp_sensor.h"
 #include "output.h"
 #include "filesystem.h"
+#include "buzzer.h"
 
 // uint8_t state_led = 0;
 static uint8_t stateMachine = 0;
@@ -37,7 +38,17 @@ MyButton btn = {
     {
         Serial.println("Factory Reset"); 
         clearWifiConfig();
-        ESP.restart(); }};
+        ESP.restart(); 
+    }
+};
+
+Buzzer buz = {
+    ._pin = BUZZER_PIN,
+    .onStart = []()
+    {Serial.println("Buzzer start");},
+    .onEnd = []()
+    {Serial.println("Buzzer stop");}
+}; 
 
 enum
 {
@@ -53,6 +64,7 @@ void Concurrent()
     WifiConfigRun();
     MYLEDControl(&led);
     MyButtonControl(btn);
+    buzzer_Control(&buz);
     TempHumRead();
 }
 
@@ -66,6 +78,7 @@ void appInit()
     Serial.begin(115200);
     initFileSystem();
     MYLEDInit(&led);
+    buzzer_init(&buz, BUZZER_PIN);
     MyButtonInit(btn);
     TempHumSensorInit();
     initTime();
@@ -116,6 +129,7 @@ void appRun()
         if (millis() - timeStamp >= 1000)
         {
             //   Serial.println("watch state");
+            buzzer_Start(&buz, 300,500);
             if (getBackgroundFile() && getDefaultBackGround() == 0)
             {
                 drawBackGround(BACK_GROUND_FILE);
